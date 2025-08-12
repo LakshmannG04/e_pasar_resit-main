@@ -109,8 +109,13 @@ export default function Sellers_Lay({
               <Link href="/client_pages/orders" className="hover:text-blue-600">
                 Orders
               </Link>
-              <Link href="/sellerDash/communications" className="hover:text-blue-600">
+              <Link href="/sellerDash/communications" className="hover:text-blue-600 relative">
                 💬 Communications
+                {unreadCount > 0 && (
+                  <span className="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 bg-red-600 rounded-full animate-pulse">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </Link>
               {(profile.UserAuth === 'Admin' || profile.UserAuth === 'SuperAdmin') && (
                 <Link href="/adminDash" className="hover:text-blue-600">
