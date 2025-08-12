@@ -112,21 +112,25 @@ import ShoppingCart from '../customComponents';
 
 
 export default function ProductListPage({ products , categories, productImages }:any) {
- 
-  
   const router = useRouter();
-  const [quan,setQuan]= useState('0');
-  const token = getToken('token');
+  const [quan, setQuan] = useState('0');
+  const [token, setToken] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
   let triggerring_category = 'all';
   let [cartItems, setCartItems] = useState([]);
-  let [exist,setExist]= useState(false);
+  let [exist, setExist] = useState(false);
   let response;
-  let [initial_index,setInitial_index] = useState(0)
-  let [final_index,setFinal_index] = useState(12)
+  let [initial_index, setInitial_index] = useState(0)
+  let [final_index, setFinal_index] = useState(12)
   let no_of_displayed_products = 12;
-  let [sliced_products,setSlicedProducts] = useState([])
-  let [category_ids, setCategoryIds]= useState<string[]>([])
-  
+  let [sliced_products, setSlicedProducts] = useState([])
+  let [category_ids, setCategoryIds] = useState<string[]>([])
+
+  // Handle client-side token loading to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+    setToken(getToken('token'));
+  }, []);
 
   const prevOrNext = (status:any)=>{
 
