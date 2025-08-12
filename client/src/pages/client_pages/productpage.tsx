@@ -56,15 +56,12 @@ export const getServerSideProps = async (context:any) => {
         // FETCH PRODUCT IMAGE
 
         try{
-            const response = await axios.get(`${Endpoint.products}/image/${product_id}`);  // Fetch product by ID
-
-            // Handle Response Status. 
-            if (response.status === 200){
-                productImage = {ProductImage:response.data.data,ProductID:product[0]?.ProductID};
-            }
+            // Create image URL directly instead of fetching image data
+            const imageUrl = `${Endpoint.products}/image/${product_id}`;
+            productImage = {ProductImage: imageUrl, ProductID: product[0]?.ProductID};
         }
         catch(error){
-            console.log("Error fetching image of product:", error);
+            console.log("Error creating image URL for product:", error);
         }
         
         // Track product view
