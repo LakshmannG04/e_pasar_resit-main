@@ -39,6 +39,7 @@ const Endpoint = {
     sendMessage: `${server_base}/communication/conversation`,
     manageDispute: `${server_base}/communication/conversation`,
     unreadCount: `${server_base}/communication/unread-count`,
+    searchUsers: `${server_base}/communication/search-users`,
     // Recommendation System endpoints
     userRecommendations: `${server_base}/products/recommendations/user`,
     productRecommendations: `${server_base}/products/recommendations/product`,
