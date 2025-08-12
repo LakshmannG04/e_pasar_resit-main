@@ -102,12 +102,11 @@ export default function ProductPage({product, productImage}:any) {
           const images = [];
           for (let recProduct of recProducts) {
             try {
-              const imgResponse = await axios.get(`${Endpoint.products}/image/${recProduct.ProductID}`);
-              if (imgResponse.status === 200) {
-                images.push({ProductID: recProduct.ProductID, ProductImage: imgResponse.data.data});
-              }
+              // Create image URL directly instead of fetching image data
+              const imageUrl = `${Endpoint.products}/image/${recProduct.ProductID}`;
+              images.push({ProductID: recProduct.ProductID, ProductImage: imageUrl});
             } catch (error) {
-              console.log("Error fetching recommendation image:", error);
+              console.log("Error creating recommendation image URL:", error);
             }
           }
           setRecommendationImages(images);
