@@ -116,7 +116,7 @@ export default function User_Layout({
         <div className="container mx-auto flex justify-between items-center">
           <h1 className="header-title text-xl font-semibold">e-Pasar</h1>
 
-          <div className="header-nav flex items-center space-x-4" suppressHydrationWarning>
+          <div className="header-nav flex items-center space-x-4">
             {/* Always-safe links (same SSR/CSR) */}
             <Link href="/" className="hover:text-blue-600 cursor-pointer">Home |</Link>
             <Link
@@ -127,49 +127,51 @@ export default function User_Layout({
             </Link>
 
             {/* Client-only area to avoid hydration mismatch */}
-            {!mounted ? (
-              <span className="text-gray-400">...</span>
-            ) : (
-              <>
-                {tokenExist && (
-                  <Link href="/client_pages/profile" className="hover:text-blue-600 cursor-pointer">
-                    Profile |
-                  </Link>
-                )}
-                {tokenExist && (
-                  <Link href="/client_pages/orders" className="hover:text-blue-600 cursor-pointer">
-                    My Orders |
-                  </Link>
-                )}
-                {tokenExist && (
-                  <Link href="/client_pages/communications" className="hover:text-blue-600 cursor-pointer">
-                    💬 Messages |
-                  </Link>
-                )}
-                {tokenExist && isSeller && (
-                  <Link
-                    href="/sellerDash/seller_products?category_id=all"
-                    className="hover:text-blue-600 cursor-pointer"
-                  >
-                    My Shop |
-                  </Link>
-                )}
-                {tokenExist && !isSeller && (
-                  <Link
-                    href="/client_pages/register_seller"
-                    className="hover:text-blue-600 cursor-pointer"
-                  >
-                    My Shop |
-                  </Link>
-                )}
+            <div suppressHydrationWarning>
+              {!mounted ? (
+                <span className="text-gray-400">...</span>
+              ) : (
+                <>
+                  {tokenExist && (
+                    <Link href="/client_pages/profile" className="hover:text-blue-600 cursor-pointer">
+                      Profile |
+                    </Link>
+                  )}
+                  {tokenExist && (
+                    <Link href="/client_pages/orders" className="hover:text-blue-600 cursor-pointer">
+                      My Orders |
+                    </Link>
+                  )}
+                  {tokenExist && (
+                    <Link href="/client_pages/communications" className="hover:text-blue-600 cursor-pointer">
+                      💬 Messages |
+                    </Link>
+                  )}
+                  {tokenExist && isSeller && (
+                    <Link
+                      href="/sellerDash/seller_products?category_id=all"
+                      className="hover:text-blue-600 cursor-pointer"
+                    >
+                      My Shop |
+                    </Link>
+                  )}
+                  {tokenExist && !isSeller && (
+                    <Link
+                      href="/client_pages/register_seller"
+                      className="hover:text-blue-600 cursor-pointer"
+                    >
+                      My Shop |
+                    </Link>
+                  )}
 
-                {tokenExist ? (
-                  <button onClick={logOutOperations} className="hover:text-red-600 cursor-pointer">Log Out</button>
-                ) : (
-                  <button onClick={handleOpen} className="hover:text-green-600 cursor-pointer">Login</button>
-                )}
-              </>
-            )}
+                  {tokenExist ? (
+                    <button onClick={logOutOperations} className="hover:text-red-600 cursor-pointer">Log Out</button>
+                  ) : (
+                    <button onClick={handleOpen} className="hover:text-green-600 cursor-pointer">Login</button>
+                  )}
+                </>
+              )}
+            </div>
           </div>
         </div>
       </header>
