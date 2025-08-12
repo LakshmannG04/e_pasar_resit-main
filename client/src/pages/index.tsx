@@ -186,12 +186,12 @@ export default function Home({ categories, products, productImages, categoryImag
             <span className="text-xs text-gray-500">{product.AvailableQty} available</span>
           </div>
 
-          <a
+          <Link
             href={`/client_pages/productpage?product_id=${product.ProductID}`}
             className="text-blue-600 hover:text-blue-800 text-xs font-medium"
           >
             View Details →
-          </a>
+          </Link>
 
           <div className="mt-3 flex items-center space-x-2">
             <input
