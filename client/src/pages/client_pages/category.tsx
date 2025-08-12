@@ -322,7 +322,7 @@ export default function ProductListPage({ products , categories, productImages }
           {productImage ? (
             <div className="relative w-full h-48 overflow-hidden rounded-lg mb-4">
               <img 
-                 src={`data:image/jpeg;base64,${productImage.ProductImage}`}
+                 src={productImage.ProductImage}
                  alt={`Image of ${product.ProductName}`}
                  className="w-full h-full object-cover transition duration-300 ease-in-out hover:scale-110"
                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/images/default-product.jpg'; }}
