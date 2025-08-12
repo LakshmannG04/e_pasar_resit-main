@@ -41,6 +41,9 @@ export default function Sellers_Lay({
         if (p.UserAuth !== 'Seller' && p.UserAuth !== 'Admin' && p.UserAuth !== 'SuperAdmin') {
           // not a seller/admin -> send back to home
           router.replace('/');
+        } else {
+          // Fetch unread message count for sellers/admins
+          fetchUnreadCount();
         }
       } catch (e) {
         console.error('Error loading seller profile:', e);
@@ -48,6 +51,34 @@ export default function Sellers_Lay({
       }
     })();
   }, [mounted, router]);
+
+  // Fetch unread message count
+  const fetchUnreadCount = async () => {
+    try {
+      const token = getToken('token');
+      if (!token) return;
+      
+      const response = await axios.get(Endpoint.unreadCount, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.status === 200) {
+        setUnreadCount(response.data.data.unreadCount);
+      }
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+    }
+  };
+
+  // Poll for new messages every 30 seconds
+  useEffect(() => {
+    if (!mounted || !profile.UserAuth) return;
+    
+    const interval = setInterval(() => {
+      fetchUnreadCount();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [mounted, profile.UserAuth]);
 
   const logOut = async () => {
     deletetoken('token');
