@@ -958,6 +958,7 @@ router.get('/recommendations/category/:categoryId', async (req, res) => {
 
 //********************************************************************************************************************
 // GET route to fetch a single product OR products of a category OR seller ID
+// IMPORTANT: Keep this route LAST to avoid conflicts with specific routes
 router.get('/:searchBy/:id', async (req, res) => {
   const { searchBy } = req.params;
   let id;
