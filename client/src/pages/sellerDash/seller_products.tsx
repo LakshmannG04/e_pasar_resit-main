@@ -38,15 +38,27 @@ const shoppingCartStyle = {
 
       // FETCHING THE PRODUCTS BASED ON THE SELLER ID.
       try {
-          const response = await axios.get(`${Endpoint.products}/seller/10`, { headers: { Authorization: `Bearer ${token}` } });
-          postMsg = response.data.message;
-
-          if (response.status === 200) {
-              products = response.data.data;
+          // First verify token and get user ID
+          const verifyResponse = await axios.get(`${Endpoint.userProfile}`, { 
+              headers: { Authorization: `Bearer ${token}` } 
+          });
+          
+          if (verifyResponse.status === 200) {
+              const userId = verifyResponse.data.data.UserID;
+              const response = await axios.get(`${Endpoint.products}/seller/${userId}`, { 
+                  headers: { Authorization: `Bearer ${token}` } 
+              });
+              postMsg = response.data.message;
+              
+              if (response.status === 200) {
+                  products = response.data.data;
+              }
           }
       } 
       catch (error) {
           console.log("Error fetching products:", error);
+          // Fallback to empty products array
+          products = [];
       }
 
       // FILTERING THE PRODUCTS BASED ON THE CATEGORIES AFTER BEING FETCHED.
