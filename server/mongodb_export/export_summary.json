@@ -1,0 +1,20 @@
+{
+  "exportDate": "2025-08-07T06:50:09.764Z",
+  "totalTables": 13,
+  "tables": {
+    "users": 7,
+    "category": 4,
+    "products": 22,
+    "cart": 0,
+    "delivery_details": 0,
+    "dispute": 0,
+    "dispute_msg": 0,
+    "feedback": 0,
+    "payment": 0,
+    "transactions": 0,
+    "product_transaction_info": 0,
+    "product_views": 214,
+    "seller_info": 1
+  },
+  "totalRecords": 248
+}

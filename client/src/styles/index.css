@@ -1,0 +1,232 @@
+/* Admin Dashboard Styles */
+.admin-container {
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2.5rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.admin-title {
+  font-size: 2.5rem;
+  color: #2c3e50;
+  margin-bottom: 2.5rem;
+  text-align: center;
+  transition: color 0.3s ease, transform 0.3s ease, text-shadow 0.3s ease;
+  position: relative;
+  font-weight: 600;
+  letter-spacing: -0.5px;
+}
+
+.admin-title:hover {
+  color: #3498db;
+  transform: scale(1.02);
+  text-shadow: 0 4px 8px rgba(52, 152, 219, 0.2);
+}
+
+.admin-title::after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 50%;
+  width: 80px;
+  height: 3px;
+  background-color: #3498db;
+  transform: translateX(-50%);
+  transition: width 0.3s ease;
+}
+
+.admin-title:hover::after {
+  width: 120px;
+}
+
+.form-group {
+  margin-bottom: 1.8rem;
+  position: relative;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #34495e;
+  transition: color 0.3s;
+}
+
+.form-input {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background-color: #f9f9f9;
+  color: #333;
+  position: relative;
+  overflow: hidden;
+}
+
+.form-input:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+  outline: none;
+  background-color: #fff;
+  transform: translateY(-2px);
+}
+
+.form-input::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background-color: #3498db;
+  transition: width 0.3s ease;
+}
+
+.form-input:focus::after {
+  width: 100%;
+}
+
+.form-input::placeholder {
+  color: #95a5a6;
+  transition: opacity 0.3s;
+}
+
+.form-input:focus::placeholder {
+  opacity: 0.7;
+}
+
+.form-select {
+  width: 100%;
+  padding: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 1rem;
+  background-color: #f9f9f9;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='%233498db' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: calc(100% - 1rem) center;
+  padding-right: 2.5rem;
+}
+
+.form-select:focus {
+  border-color: #3498db;
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.2);
+  outline: none;
+  background-color: #fff;
+}
+
+.btn-signup {
+  display: block;
+  width: 100%;
+  padding: 1rem;
+  background-color: #3498db;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);
+  text-transform: uppercase;
+}
+
+.btn-signup:hover {
+  background-color: #2980b9;
+  transform: translateY(-3px);
+  box-shadow: 0 6px 12px rgba(52, 152, 219, 0.3);
+  letter-spacing: 1px;
+}
+
+.btn-signup:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transition: left 0.7s ease;
+}
+
+.btn-signup:hover:before {
+  left: 100%;
+}
+
+.btn-signup:active {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(52, 152, 219, 0.2);
+}
+
+.btn-signup::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  background: rgba(255, 255, 255, 0.5);
+  opacity: 0;
+  border-radius: 100%;
+  transform: scale(1, 1) translate(-50%);
+  transform-origin: 50% 50%;
+}
+
+.btn-signup:focus:not(:active)::after {
+  animation: ripple 1s ease-out;
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  20% {
+    transform: scale(25, 25);
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(40, 40);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .admin-container {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+  
+  .admin-title {
+    font-size: 2rem;
+  }
+  
+  .form-input, 
+  .form-select, 
+  .btn-signup {
+    padding: 0.8rem;
+  }
+}

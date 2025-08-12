@@ -1,0 +1,79 @@
+[
+  {
+    "UserID": 1,
+    "Username": "SuperAdmin",
+    "Password": "$2a$12$MJ0BB48FibNUFFY2ca3LieAABamhJmyQ2IRHZwvbZjLbn3/przcJW",
+    "FirstName": "SuperAdmin",
+    "LastName": null,
+    "Email": "super@gmail.com",
+    "ContactNo": "0000000000",
+    "UserAuth": "SuperAdmin",
+    "AccountState": "Active"
+  },
+  {
+    "UserID": 2,
+    "Username": "admin_test",
+    "Password": "$2b$12$kH7BbvILmTvi2WjXIx/qdOsuaJ1upRQ.Bw7.AQ/KvOX5ikmBH6Qcy",
+    "FirstName": "Admin",
+    "LastName": "User",
+    "Email": "admin@test.com",
+    "ContactNo": "1234567890",
+    "UserAuth": "Admin",
+    "AccountState": "Active"
+  },
+  {
+    "UserID": 3,
+    "Username": "seller_test",
+    "Password": "$2b$12$BqK4bOj0umYrR1GgNK1k8eGXu1QJH6fnfcCipi.8RZuX10WfGwYRe",
+    "FirstName": "Test",
+    "LastName": "Seller",
+    "Email": "seller@test.com",
+    "ContactNo": "2345678901",
+    "UserAuth": "Seller",
+    "AccountState": "Active"
+  },
+  {
+    "UserID": 4,
+    "Username": "buyer_test",
+    "Password": "$2b$12$mhD0ch9x6LUvsnm2QseW4u7YwJWrwqpD.JJrTkVwq7WHBreWvHqEm",
+    "FirstName": "Test",
+    "LastName": "Buyer",
+    "Email": "buyer@test.com",
+    "ContactNo": "3456789012",
+    "UserAuth": "User",
+    "AccountState": "Active"
+  },
+  {
+    "UserID": 5,
+    "Username": "test_user_new",
+    "Password": "$2b$12$12XUehKJUqauqWxB3JkIveLaShQB2CN9mP8fWMxfQ/JntQWiC1Bn6",
+    "FirstName": "Test",
+    "LastName": "User",
+    "Email": "test@example.com",
+    "ContactNo": "1234567890",
+    "UserAuth": "User",
+    "AccountState": "Active"
+  },
+  {
+    "UserID": 6,
+    "Username": "new_buyer_test",
+    "Password": "$2b$12$Pu4OlLnJlk8Ijk82e7/rQOX7x8TvNmmIGUzMmDYxlQkl/rhRyoE52",
+    "FirstName": "New",
+    "LastName": "Buyer",
+    "Email": "newbuyer@example.com",
+    "ContactNo": "9876543210",
+    "UserAuth": "User",
+    "AccountState": "Active"
+  },
+  {
+    "UserID": 7,
+    "Username": "test_user_2025",
+    "Password": "$2b$12$yAig3I1R99T5Ld0QfMhD3u1jyvb.gokTJRjpYFu.F68kfqRYgfPae",
+    "FirstName": "Test",
+    "LastName": "User",
+    "Email": "test2025@example.com",
+    "ContactNo": "1234567890",
+    "UserAuth": "User",
+    "AccountState": "Active"
+  }
+]

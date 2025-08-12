@@ -1,0 +1,22 @@
+[
+  {
+    "CategoryID": 1,
+    "CategoryName": "Fruits",
+    "CategoryImage": "1.jpg"
+  },
+  {
+    "CategoryID": 2,
+    "CategoryName": "Vegetables",
+    "CategoryImage": "2.jpg"
+  },
+  {
+    "CategoryID": 3,
+    "CategoryName": "Seeds",
+    "CategoryImage": "3.jpg"
+  },
+  {
+    "CategoryID": 4,
+    "CategoryName": "Spices",
+    "CategoryImage": "4.jpg"
+  }
+]
