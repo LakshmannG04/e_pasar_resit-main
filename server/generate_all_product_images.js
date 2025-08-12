@@ -1,5 +1,8 @@
 #!/usr/bin/env node
 
+// Load environment variables
+require('dotenv').config();
+
 const { PRODUCTS, CATEGORY } = require('./models');
 const { generateProductImage } = require('./functions/imageService');
 
