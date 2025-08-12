@@ -426,14 +426,93 @@ export default function CommunicationSystem() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Contact User ID</label>
-                    <input
-                      type="number"
-                      value={targetUserId}
-                      onChange={(e) => setTargetUserId(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-200"
-                      placeholder="Enter user ID to contact"
-                    />
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Search User by Username</label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={targetUsername}
+                        onChange={(e) => {
+                          setTargetUsername(e.target.value);
+                          searchUsers(e.target.value);
+                          if (!e.target.value.trim()) {
+                            setSelectedUser(null);
+                          }
+                        }}
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-200"
+                        placeholder="Type username to search..."
+                      />
+                      
+                      {/* Loading indicator */}
+                      {searchingUsers && (
+                        <div className="absolute right-3 top-4">
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-600"></div>
+                        </div>
+                      )}
+                      
+                      {/* Search results dropdown */}
+                      {userSearchResults.length > 0 && (
+                        <div className="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                          {userSearchResults.map((user) => (
+                            <div
+                              key={user.UserID}
+                              onClick={() => selectUser(user)}
+                              className="p-3 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0"
+                            >
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <div className="font-medium text-gray-900">@{user.Username}</div>
+                                  <div className="text-sm text-gray-600">{user.FirstName} {user.LastName}</div>
+                                </div>
+                                <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                  user.UserAuth === 'Admin' ? 'bg-red-100 text-red-600' :
+                                  user.UserAuth === 'Seller' ? 'bg-green-100 text-green-600' :
+                                  'bg-blue-100 text-blue-600'
+                                }`}>
+                                  {user.UserAuth}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {/* Selected user display */}
+                      {selectedUser && (
+                        <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div>
+                              <div className="font-medium text-green-900">Selected: @{selectedUser.Username}</div>
+                              <div className="text-sm text-green-700">{selectedUser.FirstName} {selectedUser.LastName}</div>
+                            </div>
+                            <span className={`px-2 py-1 rounded text-xs font-medium ${
+                              selectedUser.UserAuth === 'Admin' ? 'bg-red-100 text-red-600' :
+                              selectedUser.UserAuth === 'Seller' ? 'bg-green-100 text-green-600' :
+                              'bg-blue-100 text-blue-600'
+                            }`}>
+                              {selectedUser.UserAuth}
+                            </span>
+                          </div>
+                          <button
+                            onClick={() => {
+                              setSelectedUser(null);
+                              setTargetUsername('');
+                            }}
+                            className="mt-2 text-sm text-red-600 hover:text-red-800"
+                          >
+                            ✕ Remove selection
+                          </button>
+                        </div>
+                      )}
+                      
+                      {/* No results message */}
+                      {targetUsername.trim() && !searchingUsers && userSearchResults.length === 0 && !selectedUser && (
+                        <div className="mt-2 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+                          <div className="text-sm text-gray-600 text-center">
+                            No users found with username "{targetUsername}"
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div>
