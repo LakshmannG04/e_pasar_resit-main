@@ -119,9 +119,38 @@ export default function CommunicationSystem() {
     }
   };
 
+  const searchUsers = async (searchTerm: string) => {
+    if (!searchTerm.trim()) {
+      setUserSearchResults([]);
+      return;
+    }
+
+    try {
+      setSearchingUsers(true);
+      const response = await axios.get(`${Endpoint.searchUsers}?username=${encodeURIComponent(searchTerm)}`, {
+        headers: { Authorization: `Bearer ${getToken("token")}` }
+      });
+      
+      if (response.status === 200) {
+        setUserSearchResults(response.data.data);
+      }
+    } catch (error) {
+      console.error('Error searching users:', error);
+      setUserSearchResults([]);
+    } finally {
+      setSearchingUsers(false);
+    }
+  };
+
+  const selectUser = (user: any) => {
+    setSelectedUser(user);
+    setTargetUsername(user.Username);
+    setUserSearchResults([]);
+  };
+
   const createConversation = async () => {
-    if (!newConversationTitle.trim() || !newConversationDescription.trim() || !targetUserId) {
-      alert('Please fill all fields');
+    if (!newConversationTitle.trim() || !newConversationDescription.trim() || !selectedUser) {
+      alert('Please fill all fields and select a user to contact');
       return;
     }
 
@@ -129,7 +158,7 @@ export default function CommunicationSystem() {
       const response = await axios.post(Endpoint.createDispute, {
         title: newConversationTitle,
         description: newConversationDescription,
-        lodgedAgainst: parseInt(targetUserId),
+        targetUsername: selectedUser.Username,
         priority: priority
       }, {
         headers: { Authorization: `Bearer ${getToken("token")}` }
@@ -140,12 +169,14 @@ export default function CommunicationSystem() {
         setShowCreateDialog(false);
         setNewConversationTitle('');
         setNewConversationDescription('');
-        setTargetUserId('');
+        setTargetUsername('');
+        setSelectedUser(null);
+        setUserSearchResults([]);
         fetchConversations();
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error creating conversation:', error);
-      alert('Failed to create conversation');
+      alert(error.response?.data?.message || 'Failed to create conversation');
     }
   };
 
