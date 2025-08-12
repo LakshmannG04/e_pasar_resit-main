@@ -304,8 +304,8 @@ export default function Home({ categories, products, productImages, categoryImag
               {categories.map((category: any, key: number) => (
                 <div key={key} className="bg-white p-6 shadow rounded-lg">
                   <div className="flex items-center justify-between mb-4">
-                    <Link href={`/client_pages/category?category_id=${category.CategoryID}`}>
-                      <h3 className="text-xl font-semibold text-gray-700 hover:text-blue-600 transition">{category.CategoryName}</h3>
+                    <Link href={`/client_pages/category?category_id=${category.CategoryID}`} className="text-xl font-semibold text-gray-700 hover:text-blue-600 transition">
+                      {category.CategoryName}
                     </Link>
                     <Link href={`/client_pages/category?category_id=${category.CategoryID}`} className="text-blue-600 hover:text-blue-800 font-medium text-sm">
                       View All →
