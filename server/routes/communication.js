@@ -1,30 +1,85 @@
-// server/routes/communication.js - Enhanced Communication/Messaging System
+// Enhanced Communication/Messaging System
 const express = require('express');
 const router = express.Router();
 const { checkAuth } = require('../functions/checkAuth');
 const { DISPUTE, DISPUTE_MSG, USERS } = require('../models');
 const { Op } = require('sequelize');
 
-// Create new dispute/communication thread
-router.post('/create-dispute', checkAuth(['User', 'Seller', 'Admin', 'SuperAdmin']), async (req, res) => {
+// Search users by username (for starting conversations)
+router.get('/search-users', checkAuth(['User', 'Seller', 'Admin', 'SuperAdmin']), async (req, res) => {
     try {
-        const { title, description, lodgedAgainst, priority = 'Medium' } = req.body;
-        const user = req.user;
+        const { username } = req.query;
+        const currentUser = req.user;
 
-        if (!title || !description || !lodgedAgainst) {
+        if (!username || username.trim() === '') {
             return res.status(400).json({
                 status: 400,
-                message: 'Title, description, and target user are required'
+                message: 'Username search term is required'
             });
         }
 
-        // Check if target user exists
-        const targetUser = await USERS.findOne({ where: { UserID: lodgedAgainst } });
-        if (!targetUser) {
-            return res.status(404).json({
-                status: 404,
-                message: 'Target user not found'
+        // Search for users by username (case-insensitive partial match)
+        const users = await USERS.findAll({
+            where: {
+                Username: {
+                    [Op.like]: `%${username.trim()}%`
+                },
+                UserID: {
+                    [Op.ne]: currentUser.id // Exclude current user
+                }
+            },
+            attributes: ['UserID', 'Username', 'FirstName', 'LastName', 'UserAuth'],
+            limit: 10 // Limit results for performance
+        });
+
+        res.status(200).json({
+            status: 200,
+            message: 'Users found successfully',
+            data: users
+        });
+
+    } catch (error) {
+        console.error('Error searching users:', error);
+        res.status(500).json({
+            status: 500,
+            message: 'Error searching users'
+        });
+    }
+});
+
+// Create new dispute/communication thread (updated to accept username)
+router.post('/create-dispute', checkAuth(['User', 'Seller', 'Admin', 'SuperAdmin']), async (req, res) => {
+    try {
+        const { title, description, lodgedAgainst, targetUsername, priority = 'Medium' } = req.body;
+        const user = req.user;
+
+        if (!title || !description || (!lodgedAgainst && !targetUsername)) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Title, description, and target user (ID or username) are required'
             });
+        }
+
+        let targetUser;
+
+        // If username is provided, find user by username
+        if (targetUsername) {
+            targetUser = await USERS.findOne({ where: { Username: targetUsername } });
+            if (!targetUser) {
+                return res.status(404).json({
+                    status: 404,
+                    message: `User with username '${targetUsername}' not found`
+                });
+            }
+        } else {
+            // Fallback to ID-based search for backward compatibility
+            targetUser = await USERS.findOne({ where: { UserID: lodgedAgainst } });
+            if (!targetUser) {
+                return res.status(404).json({
+                    status: 404,
+                    message: 'Target user not found'
+                });
+            }
         }
 
         // Create dispute
@@ -32,7 +87,7 @@ router.post('/create-dispute', checkAuth(['User', 'Seller', 'Admin', 'SuperAdmin
             Title: title,
             Description: description,
             LodgedBy: user.id,
-            LodgedAgainst: lodgedAgainst,
+            LodgedAgainst: targetUser.UserID,
             Priority: priority,
             Status: 'Open'
         });
@@ -41,7 +96,7 @@ router.post('/create-dispute', checkAuth(['User', 'Seller', 'Admin', 'SuperAdmin
         await DISPUTE_MSG.create({
             DisputeID: dispute.DisputeID,
             SentBy: user.id,
-            Message: `Dispute created: ${description}`,
+            Message: `Conversation started with ${targetUser.FirstName} ${targetUser.LastName} (@${targetUser.Username})`,
             MessageType: 'system'
         });
 
