@@ -196,11 +196,11 @@ class EPasarAPITester:
             self.log_test("Product View Counter", False, "No products available for testing")
 
     def test_communication_system(self):
-        """Test Enhanced Communication System"""
-        print("\n💬 Testing Enhanced Communication System...")
+        """Test Enhanced Communication System - Seller Communication Focus"""
+        print("\n💬 Testing Enhanced Communication System (Seller Focus)...")
         
         # Test get conversations
-        self.run_test(
+        success, conversations_response = self.run_test(
             "Get My Conversations",
             "GET",
             "communication/my-conversations",
@@ -215,8 +215,73 @@ class EPasarAPITester:
             200
         )
         
-        # Test create dispute (would need another user ID)
-        # This is a more complex test that requires setup
+        # Test search users functionality
+        self.run_test(
+            "Search Users by Username",
+            "GET",
+            "communication/search-users?username=test",
+            200
+        )
+        
+        # Test search users with empty query (should fail)
+        self.run_test(
+            "Search Users Empty Query",
+            "GET",
+            "communication/search-users?username=",
+            400
+        )
+        
+        # Test create conversation/dispute
+        test_conversation_data = {
+            "title": "Test Seller Communication",
+            "description": "Testing the new seller communication system functionality",
+            "targetUsername": "admin_test",  # Try to create conversation with admin
+            "priority": "Medium"
+        }
+        
+        success, create_response = self.run_test(
+            "Create New Conversation",
+            "POST",
+            "communication/create-dispute",
+            200,
+            data=test_conversation_data
+        )
+        
+        # If conversation was created successfully, test messaging
+        if success and 'data' in create_response:
+            conversation_id = create_response['data']['DisputeID']
+            
+            # Test get messages for the conversation
+            self.run_test(
+                "Get Conversation Messages",
+                "GET",
+                f"communication/conversation/{conversation_id}/messages",
+                200
+            )
+            
+            # Test send message
+            message_data = {
+                "message": "Hello! This is a test message from the seller communication system.",
+                "messageType": "message"
+            }
+            
+            self.run_test(
+                "Send Message in Conversation",
+                "POST",
+                f"communication/conversation/{conversation_id}/send-message",
+                200,
+                data=message_data
+            )
+            
+            # Test get messages again to verify message was sent
+            self.run_test(
+                "Get Updated Conversation Messages",
+                "GET",
+                f"communication/conversation/{conversation_id}/messages",
+                200
+            )
+        else:
+            self.log_test("Conversation Messaging Tests", False, "Could not create test conversation, skipping message tests")
 
     def test_comprehensive_api_endpoints(self):
         """Test comprehensive API endpoints"""

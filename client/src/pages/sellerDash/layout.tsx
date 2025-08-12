@@ -16,6 +16,7 @@ export default function Sellers_Lay({
   const router = useRouter();
   const [profile, setProfile] = useState<Profile>({});
   const [mounted, setMounted] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Mount guard to avoid SSR/CSR mismatch on auth UI
   useEffect(() => setMounted(true), []);
@@ -40,6 +41,9 @@ export default function Sellers_Lay({
         if (p.UserAuth !== 'Seller' && p.UserAuth !== 'Admin' && p.UserAuth !== 'SuperAdmin') {
           // not a seller/admin -> send back to home
           router.replace('/');
+        } else {
+          // Fetch unread message count for sellers/admins
+          fetchUnreadCount();
         }
       } catch (e) {
         console.error('Error loading seller profile:', e);
@@ -47,6 +51,34 @@ export default function Sellers_Lay({
       }
     })();
   }, [mounted, router]);
+
+  // Fetch unread message count
+  const fetchUnreadCount = async () => {
+    try {
+      const token = getToken('token');
+      if (!token) return;
+      
+      const response = await axios.get(Endpoint.unreadCount, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (response.status === 200) {
+        setUnreadCount(response.data.data.unreadCount);
+      }
+    } catch (error) {
+      console.error('Error fetching unread count:', error);
+    }
+  };
+
+  // Poll for new messages every 30 seconds
+  useEffect(() => {
+    if (!mounted || !profile.UserAuth) return;
+    
+    const interval = setInterval(() => {
+      fetchUnreadCount();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [mounted, profile.UserAuth]);
 
   const logOut = async () => {
     deletetoken('token');
@@ -76,6 +108,14 @@ export default function Sellers_Lay({
               </Link>
               <Link href="/client_pages/orders" className="hover:text-blue-600">
                 Orders
+              </Link>
+              <Link href="/sellerDash/communications" className="hover:text-blue-600 relative">
+                💬 Communications
+                {unreadCount > 0 && (
+                  <span className="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white transform translate-x-1/2 bg-red-600 rounded-full animate-pulse">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </span>
+                )}
               </Link>
               {(profile.UserAuth === 'Admin' || profile.UserAuth === 'SuperAdmin') && (
                 <Link href="/adminDash" className="hover:text-blue-600">

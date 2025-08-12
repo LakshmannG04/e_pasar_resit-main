@@ -342,11 +342,10 @@ const changeProductStatus = () => {
             <div className="w-16 h-16 bg-gray-100 flex items-center justify-center overflow-hidden rounded-md">
               {productImages.find(p => p.ProductID === item.ProductID) ? (
                 <img
-                  src={`data:image/jpeg;base64,${
-                    productImages.find(p => p.ProductID === item.ProductID).ProductImage
-                  }`}
+                  src={productImages.find(p => p.ProductID === item.ProductID).ProductImage}
                   alt={`Image of ${item.ProductName}`}
                   className="object-cover w-full h-full"
+                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/images/default-product.jpg'; }}
                 />
               ) : (
                 <span className="text-gray-400">No Image</span>
