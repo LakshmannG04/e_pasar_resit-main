@@ -45,8 +45,11 @@ export default function CommunicationSystem() {
   // Create new conversation states
   const [newConversationTitle, setNewConversationTitle] = useState('');
   const [newConversationDescription, setNewConversationDescription] = useState('');
-  const [targetUserId, setTargetUserId] = useState('');
+  const [targetUsername, setTargetUsername] = useState('');
   const [priority, setPriority] = useState('Medium');
+  const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
   useEffect(() => {
     fetchConversations();
