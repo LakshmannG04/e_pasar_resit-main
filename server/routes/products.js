@@ -420,7 +420,7 @@ router.get('/categories-info', async (req, res) => {
   }
 });
 
-// Route to generate auto image for product (Demo version with placeholder)
+// Route to generate real image for product using Unsplash API
 router.post('/generate-image', checkAuth(['Seller']), async (req, res) => {
   try {
     const { productName, category } = req.body;
@@ -432,27 +432,52 @@ router.post('/generate-image', checkAuth(['Seller']), async (req, res) => {
       });
     }
 
-    const timestamp = Date.now();
-    const sanitizedName = productName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
-    const imagePath = `demo_${sanitizedName}_${timestamp}.jpg`;
-
-    res.status(200).json({
-      status: 200,
-      message: 'Demo image generated successfully (placeholder)',
-      data: {
-        imagePath: imagePath,
-        imageInfo: {
-          photographer: 'Demo System',
-          photographerUrl: '#',
-          note: 'This is a demo - in production, real images would be downloaded from Unsplash'
+    console.log(`🎨 Generating image for: ${productName} (${category})`);
+    
+    // Use real Unsplash API to generate image
+    const result = await generateProductImage(productName, category);
+    
+    if (result.success) {
+      res.status(200).json({
+        status: 200,
+        message: 'Real image generated and downloaded successfully from Unsplash',
+        data: {
+          imagePath: result.imagePath,
+          imageInfo: {
+            photographer: result.imageInfo.photographer,
+            photographerUrl: result.imageInfo.photographerUrl,
+            source: 'Unsplash API',
+            note: 'High-quality image downloaded from Unsplash and saved to server'
+          }
         }
-      }
-    });
+      });
+    } else {
+      // Fallback to demo mode if API fails
+      const timestamp = Date.now();
+      const sanitizedName = productName.replace(/[^a-zA-Z0-9]/g, '_').toLowerCase();
+      const imagePath = `demo_${sanitizedName}_${timestamp}.jpg`;
+      
+      res.status(200).json({
+        status: 200,
+        message: 'Fallback: Demo image generated (Unsplash API unavailable)',
+        data: {
+          imagePath: imagePath,
+          imageInfo: {
+            photographer: 'Demo System',
+            photographerUrl: '#',
+            source: 'Demo Mode',
+            note: 'Unsplash API failed, using demo mode. Error: ' + result.error,
+            error: result.error
+          }
+        }
+      });
+    }
   } catch (error) {
     console.error('Error generating image:', error);
     res.status(500).json({
       status: 500,
-      message: 'Error generating product image'
+      message: 'Error generating product image',
+      error: error.message
     });
   }
 });
