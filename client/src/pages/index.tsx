@@ -233,11 +233,15 @@ export default function Home({ categories, products, productImages, categoryImag
               <Link href="/client_pages/category?category_id=all" className="bg-white text-green-600 px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
                 Browse All Products
               </Link>
-              {!token && (
+              {!mounted ? (
+                <div className="border-2 border-white px-6 py-3 rounded-lg font-semibold">
+                  Loading...
+                </div>
+              ) : !token ? (
                 <Link href="/client_pages/login" className="border-2 border-white px-6 py-3 rounded-lg font-semibold hover:bg-white hover:text-green-600 transition">
                   Get Personalized
                 </Link>
-              )}
+              ) : null}
             </div>
           </div>
         </section>
