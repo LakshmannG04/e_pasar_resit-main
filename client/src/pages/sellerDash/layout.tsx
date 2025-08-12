@@ -77,6 +77,9 @@ export default function Sellers_Lay({
               <Link href="/client_pages/orders" className="hover:text-blue-600">
                 Orders
               </Link>
+              <Link href="/sellerDash/communications" className="hover:text-blue-600">
+                💬 Communications
+              </Link>
               {(profile.UserAuth === 'Admin' || profile.UserAuth === 'SuperAdmin') && (
                 <Link href="/adminDash" className="hover:text-blue-600">
                   Admin
