@@ -62,10 +62,17 @@ export const getServerSideProps = async (context) => {
 
 export default function Home({ categories, products, productImages, categoryImages }: any) {
   const [quan, setQuan] = useState('0');
-  const token = getToken('token');
+  const [token, setToken] = useState<string | null>(null);
   const [cartItems, setCartItems] = useState<any[]>([]);
   const [exist, setExist] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+
+  // Handle client-side token loading to avoid hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+    setToken(getToken('token'));
+  }, []);
 
   const fetch_cart = async () => {
     setCartItems(getCartFromCookie);
