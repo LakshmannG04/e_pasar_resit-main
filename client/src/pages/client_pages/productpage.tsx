@@ -155,7 +155,7 @@ export default function ProductPage({product, productImage}:any) {
           {recImage ? (
             <div className="w-full h-32 overflow-hidden rounded-lg mb-3">
               <img 
-               src={`data:image/jpeg;base64,${recImage.ProductImage}`}
+               src={recImage.ProductImage}
                  alt={`Image of ${recProduct.ProductName}`}
                 className="w-full h-full object-cover transition duration-300 ease-in-out hover:scale-110"
                  onError={(e) => { (e.currentTarget as HTMLImageElement).src = '/images/default-product.jpg'; }}
