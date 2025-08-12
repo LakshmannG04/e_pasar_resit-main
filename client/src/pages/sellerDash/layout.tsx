@@ -16,6 +16,7 @@ export default function Sellers_Lay({
   const router = useRouter();
   const [profile, setProfile] = useState<Profile>({});
   const [mounted, setMounted] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Mount guard to avoid SSR/CSR mismatch on auth UI
   useEffect(() => setMounted(true), []);
