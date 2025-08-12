@@ -71,18 +71,21 @@ const shoppingCartStyle = {
 
           // FETCH THE IMAGES OF THE PRODUCTS.
           for(let product of products){
-
               try{
-                  const response = await axios.get(`${Endpoint.products}/image/${product.ProductID}`);  
-                 
-          
-                  // Handle Response Status. 
-                  if (response.status == 200){
-                      productImages.push({ProductImage:response.data.data,ProductID:product.ProductID});
-                  }
+                  // Create image URL directly instead of fetching image data
+                  const imageUrl = `${Endpoint.products}/image/${product.ProductID}`;
+                  productImages.push({
+                      ProductImage: imageUrl,
+                      ProductID: product.ProductID
+                  });
               }
               catch(error){
-                  console.log("Error fetching images of products:", error);
+                  console.log("Error creating image URL for product:", error);
+                  // Add fallback with null value to avoid undefined
+                  productImages.push({
+                      ProductImage: null,
+                      ProductID: product.ProductID
+                  });
               }    
           }
 
