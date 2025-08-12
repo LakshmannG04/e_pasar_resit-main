@@ -108,7 +108,10 @@ const shoppingCartStyle = {
       props: {
         products: products || [],
         categories: categories || [],
-        productImages: productImages || []
+        productImages: productImages.map(img => ({
+          ProductImage: img.ProductImage || null,
+          ProductID: img.ProductID || null
+        })) || []
       }
     };
   };
