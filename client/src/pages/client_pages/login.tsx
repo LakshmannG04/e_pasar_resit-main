@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 
 import Endpoint from '@/endpoint';
 import { set_token } from '@/tokenmanager';
+import getToken from '@/tokenmanager';
 import User_Layout from '@/pages/layouts';
 import { getCartFromCookie } from '../../utils/cart_ops';
 
