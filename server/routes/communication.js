@@ -18,16 +18,29 @@ router.get('/search-users', checkAuth(['User', 'Seller', 'Admin', 'SuperAdmin'])
             });
         }
 
+        let searchConditions = {
+            Username: {
+                [Op.like]: `%${username.trim()}%`
+            },
+            UserID: {
+                [Op.ne]: currentUser.id // Exclude current user
+            }
+        };
+
+        // Communication rules: 
+        // - Buyers/Sellers can contact each other
+        // - Users can only contact Admins if Admin contacted them first (we'll check this in create-dispute)
+        // - Admins can contact anyone
+        if (currentUser.userAuth === 'User' || currentUser.userAuth === 'Seller') {
+            // Buyers and Sellers can search for Users, Sellers, but not Admins (unless they have existing conversations)
+            searchConditions.UserAuth = {
+                [Op.in]: ['User', 'Seller']
+            };
+        }
+
         // Search for users by username (case-insensitive partial match)
         const users = await USERS.findAll({
-            where: {
-                Username: {
-                    [Op.like]: `%${username.trim()}%`
-                },
-                UserID: {
-                    [Op.ne]: currentUser.id // Exclude current user
-                }
-            },
+            where: searchConditions,
             attributes: ['UserID', 'Username', 'FirstName', 'LastName', 'UserAuth'],
             limit: 10 // Limit results for performance
         });
