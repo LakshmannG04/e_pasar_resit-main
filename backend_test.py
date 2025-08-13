@@ -87,8 +87,11 @@ class EPasarAPITester:
         
         if success and 'data' in response and 'token' in response['data']:
             self.token = response['data']['token']
-            return True
-        return False
+            self.user_id = response['data'].get('userID')
+            user_auth = response['data'].get('userAuth')
+            print(f"✅ Login successful - UserAuth: {user_auth}, UserID: {self.user_id}")
+            return True, user_auth
+        return False, None
 
     def test_basic_endpoints(self):
         """Test basic system endpoints"""
