@@ -74,10 +74,15 @@ export default function User_Layout({
 
   // Load profile when token exists (client-only)
   useEffect(() => {
-    if (!mounted) return;
-    const token = getToken("token");
-    if (!token) return;
+    if (!mounted || !tokenExist) return;
 
+    const token = getToken("token");
+    if (!token) {
+      console.log('❌ No token found, skipping profile fetch');
+      return;
+    }
+
+    console.log('👤 Fetching user profile...');
     let cancelled = false;
 
     const getProfile = async () => {
@@ -86,10 +91,18 @@ export default function User_Layout({
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!cancelled && response.status === 200) {
+          console.log('✅ Profile loaded:', response.data.data);
           setProfile(response.data.data);
         }
       } catch (error) {
-        console.error("Error fetching profile:", (error as any)?.response?.data || (error as any)?.message || error);
+        console.error("❌ Error fetching profile:", (error as any)?.response?.data || (error as any)?.message || error);
+        // If profile fetch fails due to invalid token, clear it
+        if ((error as any)?.response?.status === 401) {
+          console.log('🔄 Invalid token, clearing...');
+          deletetoken('token');
+          setTokenExist(false);
+          setProfile({});
+        }
       }
     };
     getProfile();
