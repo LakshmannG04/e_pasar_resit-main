@@ -58,10 +58,14 @@ export const getServerSideProps = async (context:any) => {
         try{
             // Create image URL directly instead of fetching image data
             const imageUrl = `${Endpoint.products}/image/${product_id}`;
-            productImage = {ProductImage: imageUrl, ProductID: product[0]?.ProductID};
+            productImage = {
+                ProductImage: imageUrl, 
+                ProductID: product[0]?.ProductID || null  // Use null instead of undefined
+            };
         }
         catch(error){
             console.log("Error creating image URL for product:", error);
+            productImage = {ProductImage: null, ProductID: null}; // Fallback with null values
         }
         
         // Track product view
@@ -74,9 +78,10 @@ export const getServerSideProps = async (context:any) => {
     }
 
     return {
-      props: { product: product || [],
-               productImage : productImage 
-       }
+      props: { 
+        product: product || [],
+        productImage: productImage || {ProductImage: null, ProductID: null}
+      }
     };
 };
 
@@ -87,7 +92,7 @@ export default function ProductPage({product, productImage}:any) {
   const [recommendations, setRecommendations] = useState([]);
   const [recommendationImages, setRecommendationImages] = useState([]);
   const token = getToken('token');
-  const image = productImage.ProductImage;
+  const image = productImage?.ProductImage || null;
 
   // Fetch recommendations when component mounts
   useEffect(() => {
