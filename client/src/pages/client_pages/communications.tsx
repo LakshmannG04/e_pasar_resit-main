@@ -3,6 +3,7 @@ import axios from 'axios';
 import Endpoint from '@/endpoint';
 import getToken from '@/tokenmanager';
 import User_Layout from '../layouts';
+import { useRouter } from 'next/router';
 
 interface Message {
   MessageID: number;
