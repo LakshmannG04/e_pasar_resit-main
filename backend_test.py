@@ -370,22 +370,23 @@ class EPasarAPITester:
         # Test basic connectivity
         self.test_basic_endpoints()
         
-        # Test login with provided credentials
-        print("\n🔐 Testing Authentication...")
-        login_success = self.test_login("seller_test", "seller123")
+        # Test buyer authentication flow
+        print("\n🔐 Testing Buyer Authentication...")
+        buyer_auth_success = self.test_buyer_authentication_flow()
         
-        if login_success:
-            print("✅ Login successful, proceeding with authenticated tests...")
+        if buyer_auth_success:
+            print("✅ Buyer authentication successful, proceeding with buyer-specific tests...")
             
-            # Test new AI features
-            self.test_ai_category_verification()
-            self.test_ai_image_generation()
-            self.test_product_view_counter()
+            # Test buyer communication access
             self.test_communication_system()
-            self.test_comprehensive_api_endpoints()
+            
+            # Test basic endpoints that buyers should access
+            self.test_basic_endpoints()
+            self.test_product_view_counter()
         else:
-            print("❌ Login failed, testing only public endpoints...")
+            print("❌ Buyer authentication failed, testing only public endpoints...")
             # Test what we can without authentication
+            self.test_basic_endpoints()
             self.test_product_view_counter()
         
         # Print final results
