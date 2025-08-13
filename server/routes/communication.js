@@ -32,10 +32,24 @@ router.get('/search-users', checkAuth(['User', 'Seller', 'Admin', 'SuperAdmin'])
         // - Users can only contact Admins if Admin contacted them first (we'll check this in create-dispute)
         // - Admins can contact anyone
         if (currentUser.userAuth === 'User' || currentUser.userAuth === 'Seller') {
-            // Buyers and Sellers can search for Users, Sellers, but not Admins (unless they have existing conversations)
+            // Buyers and Sellers can search for Users and Sellers, but NOT Admins or SuperAdmins
             searchConditions.UserAuth = {
                 [Op.in]: ['User', 'Seller']
             };
+            
+            // Additional explicit exclusion of any admin roles for extra safety
+            searchConditions.UserAuth = {
+                [Op.and]: [
+                    { [Op.in]: ['User', 'Seller'] },
+                    { [Op.not]: 'Admin' },
+                    { [Op.not]: 'SuperAdmin' }
+                ]
+            };
+            
+            console.log(`🔍 User search by ${currentUser.userAuth} (${currentUser.username}) - filtering out admin users`);
+        } else {
+            // Admins and SuperAdmins can search for anyone
+            console.log(`🔍 Admin user search by ${currentUser.userAuth} (${currentUser.username}) - no filtering`);
         }
 
         // Search for users by username (case-insensitive partial match)
