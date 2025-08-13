@@ -92,7 +92,7 @@ export default function ProductPage({product, productImage}:any) {
   const [recommendations, setRecommendations] = useState([]);
   const [recommendationImages, setRecommendationImages] = useState([]);
   const token = getToken('token');
-  const image = productImage.ProductImage;
+  const image = productImage?.ProductImage || null;
 
   // Fetch recommendations when component mounts
   useEffect(() => {
