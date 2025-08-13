@@ -5,6 +5,7 @@ import { useRouter } from 'next/router';
 
 import Endpoint from '@/endpoint';
 import { set_token } from '@/tokenmanager';
+import getToken from '@/tokenmanager';
 import User_Layout from '@/pages/layouts';
 import { getCartFromCookie } from '../../utils/cart_ops';
 
@@ -45,18 +46,31 @@ const LoginPage = ({ status }: any) => {
     e.preventDefault();
     if (!validateForm()) return;
 
-    console.log('Endpoint.login =', Endpoint.login);
+    console.log('🔐 Attempting login for:', username);
+    console.log('🌐 Using endpoint:', Endpoint.login);
 
     try {
       const response = await axios.post(Endpoint.login, { username, password });
+      
+      console.log('📡 Login response:', response.data);
 
-      if (response?.data?.status === 200) {
+      if (response?.data?.status === 200 && response.data.data?.token) {
         const token: string = response.data.data.token;
         const userAuth: string | undefined = response.data.data.userAuth;
+        
+        console.log('✅ Login successful! UserAuth:', userAuth);
+        console.log('🎫 Token received:', token.substring(0, 20) + '...');
+        
+        // Set token
         set_token(token);
+        
+        // Verify token was set
+        const savedToken = getToken('token');
+        console.log('💾 Token verification:', savedToken ? 'Success' : 'Failed');
 
         // Merge cookie cart into backend cart (if any)
         if (Array.isArray(cart) && cart.length > 0) {
+          console.log('🛒 Merging cart items...');
           for (const item of cart) {
             const body = {
               productId: `${item.ProductID}`,
@@ -68,25 +82,31 @@ const LoginPage = ({ status }: any) => {
           }
         }
 
+        console.log('🎉 Login process completed successfully!');
         alert(response.data.message || 'Login successful');
 
         // Role-based redirect
+        console.log('🔄 Redirecting based on role:', userAuth);
         if (userAuth === 'SuperAdmin' || userAuth === 'Admin') {
-          router.replace('/admin'); // adjust if your admin dashboard route differs
+          console.log('➡️  Redirecting to admin dashboard');
+          router.replace('/admin');
         } else if (userAuth === 'Seller') {
+          console.log('➡️  Redirecting to seller dashboard');
           router.replace('/sellerDash/seller_products?category_id=all');
         } else {
+          console.log('➡️  Redirecting to home page');
           router.replace('/');
         }
         return;
       }
 
-      // Non-200 from API
-      alert(response?.data?.message || 'Login failed');
+      // Non-200 from API or missing token
+      console.error('❌ Login failed - Invalid response:', response.data);
+      alert(response?.data?.message || 'Login failed - Invalid response');
     } catch (err: any) {
-      alert(err?.response?.data?.message || 'Login failed');
-      // eslint-disable-next-line no-console
-      console.error('Error logging in:', err);
+      console.error('❌ Login error:', err);
+      const errorMessage = err?.response?.data?.message || err?.message || 'Login failed';
+      alert(errorMessage);
     }
   };
 

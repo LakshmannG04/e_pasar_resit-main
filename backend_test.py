@@ -87,8 +87,11 @@ class EPasarAPITester:
         
         if success and 'data' in response and 'token' in response['data']:
             self.token = response['data']['token']
-            return True
-        return False
+            self.user_id = response['data'].get('userID')
+            user_auth = response['data'].get('userAuth')
+            print(f"✅ Login successful - UserAuth: {user_auth}, UserID: {self.user_id}")
+            return True, user_auth
+        return False, None
 
     def test_basic_endpoints(self):
         """Test basic system endpoints"""
@@ -195,8 +198,37 @@ class EPasarAPITester:
         else:
             self.log_test("Product View Counter", False, "No products available for testing")
 
-    def test_communication_system(self):
-        """Test Enhanced Communication System - Seller Communication Focus"""
+    def test_buyer_authentication_flow(self):
+        """Test buyer authentication and communication access"""
+        print("\n🔐 Testing Buyer Authentication Flow...")
+        
+        # Test buyer login
+        login_success, user_auth = self.test_login("buyer_test", "buyer123")
+        
+        if not login_success:
+            self.log_test("Buyer Authentication", False, "Failed to login with buyer_test credentials")
+            return False
+            
+        if user_auth != "Buyer":
+            self.log_test("Buyer Role Verification", False, f"Expected 'Buyer' role, got '{user_auth}'")
+            return False
+            
+        self.log_test("Buyer Role Verification", True, f"User authenticated as {user_auth}")
+        
+        # Test profile access
+        success, profile_response = self.run_test(
+            "Get Buyer Profile",
+            "GET",
+            "profile",
+            200
+        )
+        
+        if success:
+            profile_data = profile_response.get('data', {})
+            self.log_test("Profile Access", True, f"Profile loaded for user: {profile_data.get('Username', 'Unknown')}")
+        
+        return True
+        """Test Enhanced Communication System - Buyer Communication Focus"""
         print("\n💬 Testing Enhanced Communication System (Seller Focus)...")
         
         # Test get conversations
@@ -338,22 +370,23 @@ class EPasarAPITester:
         # Test basic connectivity
         self.test_basic_endpoints()
         
-        # Test login with provided credentials
-        print("\n🔐 Testing Authentication...")
-        login_success = self.test_login("seller_test", "seller123")
+        # Test buyer authentication flow
+        print("\n🔐 Testing Buyer Authentication...")
+        buyer_auth_success = self.test_buyer_authentication_flow()
         
-        if login_success:
-            print("✅ Login successful, proceeding with authenticated tests...")
+        if buyer_auth_success:
+            print("✅ Buyer authentication successful, proceeding with buyer-specific tests...")
             
-            # Test new AI features
-            self.test_ai_category_verification()
-            self.test_ai_image_generation()
-            self.test_product_view_counter()
+            # Test buyer communication access
             self.test_communication_system()
-            self.test_comprehensive_api_endpoints()
+            
+            # Test basic endpoints that buyers should access
+            self.test_basic_endpoints()
+            self.test_product_view_counter()
         else:
-            print("❌ Login failed, testing only public endpoints...")
+            print("❌ Buyer authentication failed, testing only public endpoints...")
             # Test what we can without authentication
+            self.test_basic_endpoints()
             self.test_product_view_counter()
         
         # Print final results

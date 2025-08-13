@@ -18,16 +18,43 @@ router.get('/search-users', checkAuth(['User', 'Seller', 'Admin', 'SuperAdmin'])
             });
         }
 
+        let searchConditions = {
+            Username: {
+                [Op.like]: `%${username.trim()}%`
+            },
+            UserID: {
+                [Op.ne]: currentUser.id // Exclude current user
+            }
+        };
+
+        // Communication rules: 
+        // - Buyers/Sellers can contact each other
+        // - Users can only contact Admins if Admin contacted them first (we'll check this in create-dispute)
+        // - Admins can contact anyone
+        if (currentUser.userAuth === 'User' || currentUser.userAuth === 'Seller') {
+            // Buyers and Sellers can search for Users and Sellers, but NOT Admins or SuperAdmins
+            searchConditions.UserAuth = {
+                [Op.in]: ['User', 'Seller']
+            };
+            
+            // Additional explicit exclusion of any admin roles for extra safety
+            searchConditions.UserAuth = {
+                [Op.and]: [
+                    { [Op.in]: ['User', 'Seller'] },
+                    { [Op.not]: 'Admin' },
+                    { [Op.not]: 'SuperAdmin' }
+                ]
+            };
+            
+            console.log(`🔍 User search by ${currentUser.userAuth} (${currentUser.username}) - filtering out admin users`);
+        } else {
+            // Admins and SuperAdmins can search for anyone
+            console.log(`🔍 Admin user search by ${currentUser.userAuth} (${currentUser.username}) - no filtering`);
+        }
+
         // Search for users by username (case-insensitive partial match)
         const users = await USERS.findAll({
-            where: {
-                Username: {
-                    [Op.like]: `%${username.trim()}%`
-                },
-                UserID: {
-                    [Op.ne]: currentUser.id // Exclude current user
-                }
-            },
+            where: searchConditions,
             attributes: ['UserID', 'Username', 'FirstName', 'LastName', 'UserAuth'],
             limit: 10 // Limit results for performance
         });
