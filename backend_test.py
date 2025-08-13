@@ -50,6 +50,8 @@ class EPasarAPITester:
             test_headers.update(headers)
 
         try:
+            print(f"🔗 Testing URL: {url}")  # Debug URL
+            
             if method == 'GET':
                 response = requests.get(url, headers=test_headers)
             elif method == 'POST':
@@ -68,7 +70,7 @@ class EPasarAPITester:
                 self.log_test(name, True, f"Status: {response.status_code}", response_json)
                 return True, response_json
             else:
-                self.log_test(name, False, f"Expected {expected_status}, got {response.status_code}", response_json)
+                self.log_test(name, False, f"Expected {expected_status}, got {response.status_code}. Response: {response.text[:100]}", response_json)
                 return False, response_json
 
         except Exception as e:
