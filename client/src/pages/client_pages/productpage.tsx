@@ -257,6 +257,32 @@ export default function ProductPage({product, productImage}:any) {
                       <p className="text-gray-600 leading-relaxed">{product.Description}</p>
                     </div>
 
+                    {/* Seller Information */}
+                    {product.Seller && (
+                      <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <h3 className="text-lg font-semibold text-blue-800 mb-1">👤 Sold by</h3>
+                            <p className="text-blue-700 font-medium">@{product.Seller.Username}</p>
+                            <p className="text-blue-600 text-sm">{product.Seller.FirstName} {product.Seller.LastName}</p>
+                            <span className="inline-block mt-1 px-2 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+                              {product.Seller.UserAuth}
+                            </span>
+                          </div>
+                          {token && (
+                            <div>
+                              <a
+                                href={`/client_pages/communications?contact=${product.Seller.Username}&subject=Inquiry about ${product.ProductName}`}
+                                className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition duration-200"
+                              >
+                                💬 Contact Seller
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Availability Info */}
                     <div className="bg-gray-50 p-4 rounded-lg">
                       <div className="grid grid-cols-2 gap-4 text-sm">
