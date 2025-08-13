@@ -1014,12 +1014,37 @@ router.get('/:searchBy/:id', async (req, res) => {
     }
   } else if (searchBy === 'product') {
     try {
-      const product = await PRODUCTS.findOne({ where: { ProductID: id } });
+      const product = await PRODUCTS.findOne({ 
+        where: { ProductID: id },
+        include: [{
+          model: USERS,
+          attributes: ['UserID', 'Username', 'FirstName', 'LastName', 'UserAuth'],
+          required: false // LEFT JOIN in case user doesn't exist
+        }]
+      });
       if (!product) {
         return res.status(404).json({ status: 404, message: `Product ID ${id} does not exist` });
       }
-      res.status(200).json({ status: 200, message: 'Singe product fetched successfully', data: product });
+      
+      // Add seller information to the response
+      const productWithSeller = {
+        ...product.toJSON(),
+        Seller: product.USER ? {
+          UserID: product.USER.UserID,
+          Username: product.USER.Username,
+          FirstName: product.USER.FirstName,
+          LastName: product.USER.LastName,
+          UserAuth: product.USER.UserAuth
+        } : null
+      };
+      
+      res.status(200).json({ 
+        status: 200, 
+        message: 'Single product with seller info fetched successfully', 
+        data: productWithSeller 
+      });
     } catch (err) {
+      console.error('Error fetching product with seller:', err);
       res.status(403).json({ status: 403, message: `Error fetching product: ${err}` });
     }
   } else if (searchBy === 'seller') {

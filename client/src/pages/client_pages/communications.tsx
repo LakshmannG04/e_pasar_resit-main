@@ -3,6 +3,7 @@ import axios from 'axios';
 import Endpoint from '@/endpoint';
 import getToken from '@/tokenmanager';
 import User_Layout from '../layouts';
+import { useRouter } from 'next/router';
 
 interface Message {
   MessageID: number;
@@ -34,6 +35,7 @@ interface Conversation {
 }
 
 export default function CommunicationSystem() {
+  const router = useRouter();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -54,7 +56,26 @@ export default function CommunicationSystem() {
   useEffect(() => {
     fetchConversations();
     fetchUnreadCount();
-  }, []);
+    
+    // Check for URL parameters to pre-fill contact form
+    const { contact, subject } = router.query;
+    if (contact && typeof contact === 'string') {
+      setTargetUsername(contact);
+      setShowCreateDialog(true);
+      
+      if (subject && typeof subject === 'string') {
+        // Decode URL-encoded subject
+        const decodedSubject = decodeURIComponent(subject);
+        setNewConversationTitle(decodedSubject);
+        setNewConversationDescription(`Hi, I'm interested in learning more about this product. Could you please provide more details?`);
+      }
+      
+      // Search for the user to pre-select them
+      if (contact.trim()) {
+        searchUsers(contact);
+      }
+    }
+  }, [router.query]);
 
   const fetchConversations = async () => {
     try {

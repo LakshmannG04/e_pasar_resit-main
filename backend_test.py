@@ -50,6 +50,8 @@ class EPasarAPITester:
             test_headers.update(headers)
 
         try:
+            print(f"🔗 Testing URL: {url}")  # Debug URL
+            
             if method == 'GET':
                 response = requests.get(url, headers=test_headers)
             elif method == 'POST':
@@ -68,7 +70,7 @@ class EPasarAPITester:
                 self.log_test(name, True, f"Status: {response.status_code}", response_json)
                 return True, response_json
             else:
-                self.log_test(name, False, f"Expected {expected_status}, got {response.status_code}", response_json)
+                self.log_test(name, False, f"Expected {expected_status}, got {response.status_code}. Response: {response.text[:100]}", response_json)
                 return False, response_json
 
         except Exception as e:
@@ -315,6 +317,82 @@ class EPasarAPITester:
         else:
             self.log_test("Conversation Messaging Tests", False, "Could not create test conversation, skipping message tests")
 
+    def test_seller_information_feature(self):
+        """Test Seller Information Feature on Product Pages"""
+        print("\n👤 Testing Seller Information Feature...")
+        
+        # Save current token and test without authentication first
+        saved_token = self.token
+        self.token = None
+        
+        # Test specific product with seller information (ProductID: 1)
+        success, product_response = self.run_test(
+            "Get Product with Seller Info (ProductID: 1) - No Auth",
+            "GET",
+            "products/product/1",
+            200
+        )
+        
+        # Restore token
+        self.token = saved_token
+        
+        if success and 'data' in product_response:
+            product_data = product_response['data']
+            
+            # Verify seller information is present
+            if 'Seller' in product_data and product_data['Seller']:
+                seller_info = product_data['Seller']
+                
+                # Check required seller fields
+                required_fields = ['UserID', 'Username', 'FirstName', 'LastName', 'UserAuth']
+                missing_fields = []
+                
+                for field in required_fields:
+                    if field not in seller_info or seller_info[field] is None:
+                        missing_fields.append(field)
+                
+                if not missing_fields:
+                    self.log_test(
+                        "Seller Information Completeness", 
+                        True, 
+                        f"All seller fields present: Username={seller_info['Username']}, Name={seller_info['FirstName']} {seller_info['LastName']}, Role={seller_info['UserAuth']}"
+                    )
+                    
+                    # Verify expected test data
+                    if (seller_info['Username'] == 'seller_test' and 
+                        seller_info['FirstName'] == 'Test' and 
+                        seller_info['LastName'] == 'Seller' and 
+                        seller_info['UserAuth'] == 'Seller'):
+                        self.log_test(
+                            "Test Seller Data Verification", 
+                            True, 
+                            "Test seller data matches expected values"
+                        )
+                    else:
+                        self.log_test(
+                            "Test Seller Data Verification", 
+                            False, 
+                            f"Seller data mismatch: {seller_info}"
+                        )
+                else:
+                    self.log_test(
+                        "Seller Information Completeness", 
+                        False, 
+                        f"Missing seller fields: {missing_fields}"
+                    )
+            else:
+                self.log_test(
+                    "Seller Information Presence", 
+                    False, 
+                    "No seller information found in product response"
+                )
+        else:
+            self.log_test(
+                "Product API Response", 
+                False, 
+                "Failed to get product data for seller info test"
+            )
+
     def test_comprehensive_api_endpoints(self):
         """Test comprehensive API endpoints"""
         print("\n🔧 Testing Comprehensive API Endpoints...")
@@ -383,11 +461,15 @@ class EPasarAPITester:
             # Test basic endpoints that buyers should access
             self.test_basic_endpoints()
             self.test_product_view_counter()
+            
+            # Test seller information feature
+            self.test_seller_information_feature()
         else:
             print("❌ Buyer authentication failed, testing only public endpoints...")
             # Test what we can without authentication
             self.test_basic_endpoints()
             self.test_product_view_counter()
+            self.test_seller_information_feature()
         
         # Print final results
         print("\n" + "=" * 60)
