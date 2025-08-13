@@ -321,13 +321,20 @@ class EPasarAPITester:
         """Test Seller Information Feature on Product Pages"""
         print("\n👤 Testing Seller Information Feature...")
         
+        # Save current token and test without authentication first
+        saved_token = self.token
+        self.token = None
+        
         # Test specific product with seller information (ProductID: 1)
         success, product_response = self.run_test(
-            "Get Product with Seller Info (ProductID: 1)",
+            "Get Product with Seller Info (ProductID: 1) - No Auth",
             "GET",
             "products/product/1",
             200
         )
+        
+        # Restore token
+        self.token = saved_token
         
         if success and 'data' in product_response:
             product_data = product_response['data']
