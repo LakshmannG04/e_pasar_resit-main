@@ -315,6 +315,75 @@ class EPasarAPITester:
         else:
             self.log_test("Conversation Messaging Tests", False, "Could not create test conversation, skipping message tests")
 
+    def test_seller_information_feature(self):
+        """Test Seller Information Feature on Product Pages"""
+        print("\n👤 Testing Seller Information Feature...")
+        
+        # Test specific product with seller information (ProductID: 1)
+        success, product_response = self.run_test(
+            "Get Product with Seller Info (ProductID: 1)",
+            "GET",
+            "products/product/1",
+            200
+        )
+        
+        if success and 'data' in product_response:
+            product_data = product_response['data']
+            
+            # Verify seller information is present
+            if 'Seller' in product_data and product_data['Seller']:
+                seller_info = product_data['Seller']
+                
+                # Check required seller fields
+                required_fields = ['UserID', 'Username', 'FirstName', 'LastName', 'UserAuth']
+                missing_fields = []
+                
+                for field in required_fields:
+                    if field not in seller_info or seller_info[field] is None:
+                        missing_fields.append(field)
+                
+                if not missing_fields:
+                    self.log_test(
+                        "Seller Information Completeness", 
+                        True, 
+                        f"All seller fields present: Username={seller_info['Username']}, Name={seller_info['FirstName']} {seller_info['LastName']}, Role={seller_info['UserAuth']}"
+                    )
+                    
+                    # Verify expected test data
+                    if (seller_info['Username'] == 'seller_test' and 
+                        seller_info['FirstName'] == 'Test' and 
+                        seller_info['LastName'] == 'Seller' and 
+                        seller_info['UserAuth'] == 'Seller'):
+                        self.log_test(
+                            "Test Seller Data Verification", 
+                            True, 
+                            "Test seller data matches expected values"
+                        )
+                    else:
+                        self.log_test(
+                            "Test Seller Data Verification", 
+                            False, 
+                            f"Seller data mismatch: {seller_info}"
+                        )
+                else:
+                    self.log_test(
+                        "Seller Information Completeness", 
+                        False, 
+                        f"Missing seller fields: {missing_fields}"
+                    )
+            else:
+                self.log_test(
+                    "Seller Information Presence", 
+                    False, 
+                    "No seller information found in product response"
+                )
+        else:
+            self.log_test(
+                "Product API Response", 
+                False, 
+                "Failed to get product data for seller info test"
+            )
+
     def test_comprehensive_api_endpoints(self):
         """Test comprehensive API endpoints"""
         print("\n🔧 Testing Comprehensive API Endpoints...")
