@@ -58,10 +58,14 @@ export const getServerSideProps = async (context:any) => {
         try{
             // Create image URL directly instead of fetching image data
             const imageUrl = `${Endpoint.products}/image/${product_id}`;
-            productImage = {ProductImage: imageUrl, ProductID: product[0]?.ProductID};
+            productImage = {
+                ProductImage: imageUrl, 
+                ProductID: product[0]?.ProductID || null  // Use null instead of undefined
+            };
         }
         catch(error){
             console.log("Error creating image URL for product:", error);
+            productImage = {ProductImage: null, ProductID: null}; // Fallback with null values
         }
         
         // Track product view
