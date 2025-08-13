@@ -452,11 +452,15 @@ class EPasarAPITester:
             # Test basic endpoints that buyers should access
             self.test_basic_endpoints()
             self.test_product_view_counter()
+            
+            # Test seller information feature
+            self.test_seller_information_feature()
         else:
             print("❌ Buyer authentication failed, testing only public endpoints...")
             # Test what we can without authentication
             self.test_basic_endpoints()
             self.test_product_view_counter()
+            self.test_seller_information_feature()
         
         # Print final results
         print("\n" + "=" * 60)
