@@ -57,15 +57,20 @@ export default function User_Layout({
 
   // Token check / route guard
   useEffect(() => {
+    if (!mounted) return; // Wait for hydration
+
     const token = getToken("token");
     const isPublic = PUBLIC_ROUTES.includes(router.pathname);
 
+    console.log('🔍 Auth check - Token exists:', !!token, 'Route:', router.pathname, 'Is Public:', isPublic);
+
     if (!token && !isPublic) {
+      console.log('❌ No token for private route, redirecting to home');
       alert("Session Ended");
       router.push("/");
     }
     setTokenExist(!!token);
-  }, [router.pathname]);
+  }, [router.pathname, mounted]);
 
   // Load profile when token exists (client-only)
   useEffect(() => {
