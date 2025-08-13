@@ -78,9 +78,10 @@ export const getServerSideProps = async (context:any) => {
     }
 
     return {
-      props: { product: product || [],
-               productImage : productImage 
-       }
+      props: { 
+        product: product || [],
+        productImage: productImage || {ProductImage: null, ProductID: null}
+      }
     };
 };
 
