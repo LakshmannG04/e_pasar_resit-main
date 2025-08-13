@@ -228,7 +228,7 @@ class EPasarAPITester:
             self.log_test("Profile Access", True, f"Profile loaded for user: {profile_data.get('Username', 'Unknown')}")
         
         return True
-        """Test Enhanced Communication System - Seller Communication Focus"""
+        """Test Enhanced Communication System - Buyer Communication Focus"""
         print("\n💬 Testing Enhanced Communication System (Seller Focus)...")
         
         # Test get conversations
