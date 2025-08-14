@@ -823,13 +823,13 @@ router.get('/recommendations/product/:productId', async (req, res) => {
         ProdStatus: 'Active',
         CategoryID: baseProduct.CategoryID,
         ProductID: {
-          [sequelize.Op.notIn]: [
+          [Op.notIn]: [
             parseInt(productId),
             ...recommendations.map(r => r.ProductID)
           ]
         },
         Price: {
-          [sequelize.Op.between]: [priceMin, priceMax]
+          [Op.between]: [priceMin, priceMax]
         }
       },
       order: sequelize.literal('RANDOM()'),
@@ -844,7 +844,7 @@ router.get('/recommendations/product/:productId', async (req, res) => {
           ProdStatus: 'Active',
           UserID: baseProduct.UserID,
           ProductID: {
-            [sequelize.Op.notIn]: [
+            [Op.notIn]: [
               parseInt(productId),
               ...recommendations.map(r => r.ProductID)
             ]
