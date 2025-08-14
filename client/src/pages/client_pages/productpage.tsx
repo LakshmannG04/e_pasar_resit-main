@@ -98,7 +98,7 @@ export default function ProductPage({product, productImage}:any) {
   useEffect(() => {
     const fetchRecommendations = async () => {
       try {
-        const response = await axios.get(`${Endpoint.products}/recommendations/${product.ProductID}`);
+        const response = await axios.get(`${Endpoint.products}/recommendations/product/${product.ProductID}`);
         if (response.status === 200) {
           const recProducts = response.data.data;
           setRecommendations(recProducts);
