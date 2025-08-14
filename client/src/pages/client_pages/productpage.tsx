@@ -179,6 +179,33 @@ export default function ProductPage({product, productImage}:any) {
     );
   };
 
+  // Handle direct contact with seller - NEW STREAMLINED APPROACH
+  const handleContactSeller = async (sellerId, productId) => {
+    if (!token) {
+      alert('Please login to contact seller');
+      return;
+    }
+
+    try {
+      const response = await axios.post(Endpoint.contactSeller, {
+        sellerId: sellerId,
+        productId: productId,
+        initialMessage: `Hi, I'm interested in ${product.ProductName}. Could you provide more details?`
+      }, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+
+      if (response.status === 200) {
+        const conversationId = response.data.data.conversationId;
+        // Redirect directly to the conversation
+        router.push(`/client_pages/communications?conversation=${conversationId}`);
+      }
+    } catch (error) {
+      console.error('Error starting conversation:', error);
+      alert('Error starting conversation. Please try again.');
+    }
+  };
+
   
   if (!product) {
     return (
