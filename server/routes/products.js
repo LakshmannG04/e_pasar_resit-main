@@ -7,11 +7,12 @@ const { verifyToken } = require('../functions/verifyToken');
 const { checkAuth } = require('../functions/checkAuth');
 const fs = require('fs');
 
-// Import new services
-const { suggestCategory, getAvailableCategories } = require('../functions/categoryVerification');
+// Import enhanced verification services
+const { suggestCategory, verifyProductSuitability, getAvailableCategories } = require('../functions/categoryVerification');
 const { generateProductImage, getImageOptions } = require('../functions/imageService');
 
 const { sequelize, CATEGORY, PRODUCTS, CART, PRODUCT_VIEWS, DISPUTE_MSG, USERS } = require('../models');
+const { Op } = require('sequelize');
 
 const imageFolderPath = path.join(__dirname, '..', 'images/products');
 
@@ -98,22 +99,66 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// checks if necessary fields are provided
-// checks if category provided is valid
+// Enhanced product validation with agricultural verification
 const validateProduct = async (req, res, next) => {
-  const { productName, price, category } = req.body;
+  const { productName, price, category, description } = req.body;
 
   if (!productName || !price || !category) {
     return res.status(403).json({ status: 403, message: 'Required fields not provided' });
   }
 
   try {
-    await CATEGORY.findOne({ where: { CategoryID: category } });
-  } catch (err) {
-    return res.status(404).json({ status: 404, message: 'Invalid category' });
-  }
+    // Check if category exists
+    const categoryExists = await CATEGORY.findOne({ where: { CategoryID: category } });
+    if (!categoryExists) {
+      return res.status(404).json({ status: 404, message: 'Invalid category' });
+    }
 
-  next();
+    // Enhanced Agricultural Product Verification
+    const productDescription = description || 'No description available';
+    const verificationResult = await verifyProductSuitability(productName, productDescription);
+
+    if (!verificationResult.approved) {
+      return res.status(422).json({ 
+        status: 422, 
+        message: 'Product not approved for agricultural marketplace',
+        error: 'PRODUCT_VERIFICATION_FAILED',
+        details: {
+          reason: verificationResult.reason,
+          message: verificationResult.message,
+          confidence: verificationResult.confidence,
+          recommendation: verificationResult.recommendation,
+          forbiddenKeywords: verificationResult.forbiddenKeywords,
+          matchedKeywords: verificationResult.matchedKeywords
+        }
+      });
+    }
+
+    // If approved but suggested category differs from selected, warn the user
+    if (verificationResult.suggestedCategory && 
+        verificationResult.suggestedCategory !== parseInt(category) && 
+        verificationResult.confidence > 40) {
+      
+      req.categoryWarning = {
+        suggestedCategory: verificationResult.suggestedCategory,
+        suggestedCategoryName: verificationResult.categoryName,
+        confidence: verificationResult.confidence,
+        message: `Our AI suggests this product might fit better in the ${verificationResult.categoryName} category (${verificationResult.confidence}% confidence)`
+      };
+    }
+
+    // Store verification result for use in product creation
+    req.verificationResult = verificationResult;
+    next();
+
+  } catch (err) {
+    console.error('Error in product validation:', err);
+    return res.status(500).json({ 
+      status: 500, 
+      message: 'Error validating product. Please try again.',
+      error: 'VALIDATION_ERROR'
+    });
+  }
 };
 
 // ACTUAL POST route to create a new product
@@ -182,10 +227,29 @@ router.post('/', checkAuth(['Seller']), upload.single('image'), validateProduct,
       }
     }
 
+    // Enhanced response with verification info
+    const responseData = {
+      ...productEntry.get(), 
+      imageProcessed,
+      verification: {
+        approved: req.verificationResult.approved,
+        confidence: req.verificationResult.confidence,
+        reason: req.verificationResult.reason,
+        matchedKeywords: req.verificationResult.matchedKeywords
+      }
+    };
+
+    // Add category warning if present
+    if (req.categoryWarning) {
+      responseData.categoryWarning = req.categoryWarning;
+    }
+
     res.status(200).json({
       status: 200,
-      message: 'Product created successfully',
-      data: { ...productEntry.get(), imageProcessed }
+      message: req.categoryWarning 
+        ? `Product created successfully. ${req.categoryWarning.message}`
+        : 'Product created successfully and verified as agricultural item',
+      data: responseData
     });
   } catch (err) {
     if (err.name === 'SequelizeValidationError') {
@@ -372,6 +436,36 @@ router.patch('/toggleStatus', checkAuth(['Seller', 'SuperAdmin', 'Admin']), asyn
 
 //********************************************************************************************************************
 // NEW API ENDPOINTS FOR CLIENT REQUIREMENTS
+
+// Enhanced route to verify product before creation (dry-run)
+router.post('/verify-product', checkAuth(['Seller']), async (req, res) => {
+  try {
+    const { productName, description } = req.body;
+
+    if (!productName || !description) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Product name and description are required for verification'
+      });
+    }
+
+    const verificationResult = await verifyProductSuitability(productName, description);
+
+    res.status(200).json({
+      status: 200,
+      message: verificationResult.approved 
+        ? 'Product verification passed - ready for listing'
+        : 'Product verification failed - cannot be listed',
+      data: verificationResult
+    });
+  } catch (error) {
+    console.error('Error in product verification:', error);
+    res.status(500).json({
+      status: 500,
+      message: 'Error verifying product'
+    });
+  }
+});
 
 // Route to suggest category based on product description
 router.post('/suggest-category', checkAuth(['Seller']), async (req, res) => {
@@ -577,7 +671,7 @@ router.get('/view-stats/:id', async (req, res) => {
       where: {
         ProductID: productId,
         ViewedAt: {
-          [sequelize.Op.gte]: sevenDaysAgo
+          [Op.gte]: sevenDaysAgo
         }
       }
     });
@@ -705,9 +799,9 @@ router.get('/recommendations/user', checkAuth(['User', 'Seller', 'Admin', 'Super
       const categoryRecommendations = await PRODUCTS.findAll({
         where: {
           ProdStatus: 'Active',
-          CategoryID: { [sequelize.Op.in]: viewedCategories },
+          CategoryID: { [Op.in]: viewedCategories },
           ProductID: {
-            [sequelize.Op.notIn]: [
+            [Op.notIn]: [
               ...viewedProductIds,
               ...recommendations.map(r => r.ProductID)
             ]
@@ -821,13 +915,13 @@ router.get('/recommendations/product/:productId', async (req, res) => {
         ProdStatus: 'Active',
         CategoryID: baseProduct.CategoryID,
         ProductID: {
-          [sequelize.Op.notIn]: [
+          [Op.notIn]: [
             parseInt(productId),
             ...recommendations.map(r => r.ProductID)
           ]
         },
         Price: {
-          [sequelize.Op.between]: [priceMin, priceMax]
+          [Op.between]: [priceMin, priceMax]
         }
       },
       order: sequelize.literal('RANDOM()'),
@@ -842,7 +936,7 @@ router.get('/recommendations/product/:productId', async (req, res) => {
           ProdStatus: 'Active',
           UserID: baseProduct.UserID,
           ProductID: {
-            [sequelize.Op.notIn]: [
+            [Op.notIn]: [
               parseInt(productId),
               ...recommendations.map(r => r.ProductID)
             ]

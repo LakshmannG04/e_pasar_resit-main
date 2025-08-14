@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """
-E-Pasar Agricultural Marketplace - Backend API Testing
-Tests all the new features mentioned in the review request:
-1. AI Category Verification
-2. AI Image Generation 
-3. Enhanced Communication System
-4. Product View Counter
+E-Pasar Agricultural Marketplace - Enhanced Product Verification Testing
+Tests the enhanced agricultural product verification system:
+1. Forbidden Product Detection (Chair - should be REJECTED)
+2. Low Agricultural Match Detection (Random Item - should be REJECTED)  
+3. Valid Agricultural Product Approval (Fresh Organic Apples - should be APPROVED)
+4. Product Creation with Forbidden Item (should be blocked)
+5. Product Creation with Valid Agricultural Item (should succeed)
+6. Enhanced suggest-category endpoint with approval status
 """
 
 import requests
@@ -95,15 +97,383 @@ class EPasarAPITester:
             return True, user_auth
         return False, None
 
-    def test_basic_endpoints(self):
-        """Test basic system endpoints"""
-        print("\n🔍 Testing Basic System Endpoints...")
+    def test_enhanced_product_verification(self):
+        """Test the enhanced agricultural product verification system"""
+        print("\n🔍 Testing Enhanced Agricultural Product Verification System...")
         
-        # Test products endpoint
-        self.run_test("Get All Products", "GET", "products", 200)
+        # Test 1: Forbidden Product (Chair) - Should be REJECTED
+        print("\n--- Test 1: Forbidden Product (Chair) ---")
+        forbidden_data = {
+            "productName": "Office Chair",
+            "description": "Comfortable swivel chair for office use"
+        }
         
-        # Test categories endpoint
-        self.run_test("Get Categories", "GET", "category", 200)
+        success, response = self.run_test(
+            "Forbidden Product Verification (Chair)",
+            "POST",
+            "products/verify-product",
+            200,
+            data=forbidden_data
+        )
+        
+        if success and 'data' in response:
+            verification_data = response['data']
+            if not verification_data.get('approved', True):
+                if verification_data.get('reason') == 'FORBIDDEN_PRODUCT':
+                    forbidden_keywords = verification_data.get('forbiddenKeywords', [])
+                    if 'chair' in forbidden_keywords:
+                        self.log_test(
+                            "Forbidden Keywords Detection", 
+                            True, 
+                            f"Correctly detected forbidden keywords: {forbidden_keywords}"
+                        )
+                    else:
+                        self.log_test(
+                            "Forbidden Keywords Detection", 
+                            False, 
+                            f"Expected 'chair' in forbidden keywords, got: {forbidden_keywords}"
+                        )
+                else:
+                    self.log_test(
+                        "Forbidden Product Rejection Reason", 
+                        False, 
+                        f"Expected FORBIDDEN_PRODUCT, got: {verification_data.get('reason')}"
+                    )
+            else:
+                self.log_test(
+                    "Forbidden Product Rejection", 
+                    False, 
+                    "Chair should have been rejected but was approved"
+                )
+        
+        # Test 2: Low Agricultural Match - Should be REJECTED
+        print("\n--- Test 2: Low Agricultural Match ---")
+        low_match_data = {
+            "productName": "Random Item",
+            "description": "Some generic product description"
+        }
+        
+        success, response = self.run_test(
+            "Low Agricultural Match Verification",
+            "POST",
+            "products/verify-product",
+            200,
+            data=low_match_data
+        )
+        
+        if success and 'data' in response:
+            verification_data = response['data']
+            if not verification_data.get('approved', True):
+                if verification_data.get('reason') == 'LOW_AGRICULTURAL_MATCH':
+                    confidence = verification_data.get('confidence', 100)
+                    if confidence < 25:  # Below minimum threshold
+                        self.log_test(
+                            "Low Confidence Rejection", 
+                            True, 
+                            f"Correctly rejected with low confidence: {confidence}%"
+                        )
+                    else:
+                        self.log_test(
+                            "Low Confidence Rejection", 
+                            False, 
+                            f"Confidence too high for rejection: {confidence}%"
+                        )
+                else:
+                    self.log_test(
+                        "Low Match Rejection Reason", 
+                        False, 
+                        f"Expected LOW_AGRICULTURAL_MATCH, got: {verification_data.get('reason')}"
+                    )
+            else:
+                self.log_test(
+                    "Low Agricultural Match Rejection", 
+                    False, 
+                    "Random item should have been rejected but was approved"
+                )
+        
+        # Test 3: Valid Agricultural Product - Should be APPROVED
+        print("\n--- Test 3: Valid Agricultural Product ---")
+        valid_data = {
+            "productName": "Fresh Organic Apples",
+            "description": "Sweet red apples freshly harvested from our orchard"
+        }
+        
+        success, response = self.run_test(
+            "Valid Agricultural Product Verification",
+            "POST",
+            "products/verify-product",
+            200,
+            data=valid_data
+        )
+        
+        if success and 'data' in response:
+            verification_data = response['data']
+            if verification_data.get('approved', False):
+                confidence = verification_data.get('confidence', 0)
+                if confidence >= 25:  # Above minimum threshold
+                    matched_keywords = verification_data.get('matchedKeywords', [])
+                    expected_keywords = ['apple', 'fresh', 'organic', 'harvest', 'orchard']
+                    found_keywords = [kw for kw in expected_keywords if kw in matched_keywords]
+                    
+                    self.log_test(
+                        "Valid Product Approval", 
+                        True, 
+                        f"Correctly approved with {confidence}% confidence, matched keywords: {found_keywords}"
+                    )
+                    
+                    # Check suggested category
+                    suggested_category = verification_data.get('suggestedCategory')
+                    if suggested_category == 1:  # Fruits category
+                        self.log_test(
+                            "Category Suggestion Accuracy", 
+                            True, 
+                            f"Correctly suggested Fruits category (ID: {suggested_category})"
+                        )
+                    else:
+                        self.log_test(
+                            "Category Suggestion Accuracy", 
+                            False, 
+                            f"Expected Fruits category (1), got: {suggested_category}"
+                        )
+                else:
+                    self.log_test(
+                        "Valid Product Confidence", 
+                        False, 
+                        f"Confidence too low for valid product: {confidence}%"
+                    )
+            else:
+                self.log_test(
+                    "Valid Agricultural Product Approval", 
+                    False, 
+                    "Fresh organic apples should have been approved but was rejected"
+                )
+
+    def test_product_creation_with_verification(self):
+        """Test product creation with enhanced verification"""
+        print("\n🏭 Testing Product Creation with Enhanced Verification...")
+        
+        # Test 4: Try to create product with forbidden item (Chair)
+        print("\n--- Test 4: Product Creation with Forbidden Item ---")
+        forbidden_product_data = {
+            "productName": "Office Chair",
+            "description": "Comfortable swivel chair for office use",
+            "price": 150.00,
+            "category": 1,  # Fruits category (wrong category for chair)
+            "MOQ": 1,
+            "availableQty": 10
+        }
+        
+        success, response = self.run_test(
+            "Create Product with Forbidden Item",
+            "POST",
+            "products",
+            422,  # Should return 422 with detailed error
+            data=forbidden_product_data
+        )
+        
+        if success and response.get('status') == 422:
+            error_details = response.get('details', {})
+            if error_details.get('reason') == 'FORBIDDEN_PRODUCT':
+                forbidden_keywords = error_details.get('forbiddenKeywords', [])
+                self.log_test(
+                    "Product Creation Blocked - Forbidden Item", 
+                    True, 
+                    f"Correctly blocked forbidden product with keywords: {forbidden_keywords}"
+                )
+            else:
+                self.log_test(
+                    "Product Creation Block Reason", 
+                    False, 
+                    f"Expected FORBIDDEN_PRODUCT reason, got: {error_details.get('reason')}"
+                )
+        
+        # Test 5: Create product with valid agricultural item
+        print("\n--- Test 5: Product Creation with Valid Agricultural Item ---")
+        # Use timestamp to ensure unique product name
+        timestamp = int(datetime.now().timestamp())
+        valid_product_data = {
+            "productName": f"Fresh Organic Tomatoes {timestamp}",
+            "description": "Locally grown organic tomatoes, perfect for cooking and salads. Rich in vitamins and minerals.",
+            "price": 5.99,
+            "category": 2,  # Vegetables category
+            "MOQ": 1,
+            "availableQty": 50
+        }
+        
+        success, response = self.run_test(
+            "Create Product with Valid Agricultural Item",
+            "POST",
+            "products",
+            200,
+            data=valid_product_data
+        )
+        
+        if success and 'data' in response:
+            product_data = response['data']
+            verification_info = product_data.get('verification', {})
+            
+            if verification_info.get('approved', False):
+                confidence = verification_info.get('confidence', 0)
+                matched_keywords = verification_info.get('matchedKeywords', [])
+                
+                self.log_test(
+                    "Valid Product Creation Success", 
+                    True, 
+                    f"Product created successfully with {confidence}% confidence, keywords: {matched_keywords[:5]}"
+                )
+                
+                # Store product ID for cleanup if needed
+                self.created_product_id = product_data.get('ProductID')
+            else:
+                self.log_test(
+                    "Valid Product Creation Verification", 
+                    False, 
+                    "Valid agricultural product was not approved during creation"
+                )
+
+    def test_enhanced_suggest_category(self):
+        """Test the enhanced suggest-category endpoint with approval status"""
+        print("\n🎯 Testing Enhanced Suggest-Category Endpoint...")
+        
+        # Test 6: Enhanced suggest-category with approval status
+        test_data = {
+            "productName": "Fresh Organic Carrots",
+            "description": "Crunchy orange carrots grown organically on our farm"
+        }
+        
+        success, response = self.run_test(
+            "Enhanced Suggest-Category with Approval",
+            "POST",
+            "products/suggest-category",
+            200,
+            data=test_data
+        )
+        
+        if success and 'data' in response:
+            suggestion_data = response['data']
+            
+            # Check if approval status is included
+            if 'approved' in suggestion_data:
+                approved = suggestion_data.get('approved', False)
+                confidence = suggestion_data.get('confidence', 0)
+                suggested_category = suggestion_data.get('suggestedCategory')
+                
+                if approved and confidence >= 25:
+                    self.log_test(
+                        "Enhanced Suggest-Category Approval", 
+                        True, 
+                        f"Correctly approved with {confidence}% confidence, suggested category: {suggested_category}"
+                    )
+                    
+                    # Check backward compatibility fields
+                    legacy_fields = ['suggestedCategory', 'confidence', 'reason', 'categoryName']
+                    missing_fields = [field for field in legacy_fields if field not in suggestion_data]
+                    
+                    if not missing_fields:
+                        self.log_test(
+                            "Backward Compatibility", 
+                            True, 
+                            "All legacy fields present for backward compatibility"
+                        )
+                    else:
+                        self.log_test(
+                            "Backward Compatibility", 
+                            False, 
+                            f"Missing legacy fields: {missing_fields}"
+                        )
+                else:
+                    self.log_test(
+                        "Enhanced Suggest-Category Approval", 
+                        False, 
+                        f"Valid carrots should be approved, got approved={approved}, confidence={confidence}%"
+                    )
+            else:
+                self.log_test(
+                    "Enhanced Suggest-Category Format", 
+                    False, 
+                    "Enhanced suggest-category should include approval status"
+                )
+
+    def test_confidence_threshold_enforcement(self):
+        """Test that the minimum confidence threshold (25%) is properly enforced"""
+        print("\n📊 Testing Confidence Threshold Enforcement...")
+        
+        # Test with borderline agricultural terms
+        borderline_data = {
+            "productName": "Green Thing",
+            "description": "A green colored item"
+        }
+        
+        success, response = self.run_test(
+            "Borderline Confidence Test",
+            "POST",
+            "products/verify-product",
+            200,
+            data=borderline_data
+        )
+        
+        if success and 'data' in response:
+            verification_data = response['data']
+            confidence = verification_data.get('confidence', 0)
+            approved = verification_data.get('approved', True)
+            
+            # Should be rejected due to low confidence
+            if confidence < 25 and not approved:
+                self.log_test(
+                    "Minimum Confidence Threshold Enforcement", 
+                    True, 
+                    f"Correctly rejected low confidence product: {confidence}%"
+                )
+            elif confidence >= 25 and approved:
+                self.log_test(
+                    "Minimum Confidence Threshold Enforcement", 
+                    True, 
+                    f"Correctly approved product above threshold: {confidence}%"
+                )
+            else:
+                self.log_test(
+                    "Minimum Confidence Threshold Enforcement", 
+                    False, 
+                    f"Threshold enforcement inconsistent: confidence={confidence}%, approved={approved}"
+                )
+
+    def run_all_verification_tests(self):
+        """Run all enhanced verification tests"""
+        print("🚀 Starting Enhanced Agricultural Product Verification Tests")
+        print(f"📡 Testing against: {self.base_url}")
+        print("=" * 80)
+        
+        # Login as seller to test protected endpoints
+        print("\n🔐 Authenticating as Seller...")
+        login_success, user_auth = self.test_login("seller_test", "seller123")
+        
+        if not login_success:
+            print("❌ Failed to authenticate as seller. Cannot test protected endpoints.")
+            return False
+        
+        print(f"✅ Authenticated as {user_auth}")
+        
+        # Run all verification tests
+        self.test_enhanced_product_verification()
+        self.test_product_creation_with_verification()
+        self.test_enhanced_suggest_category()
+        self.test_confidence_threshold_enforcement()
+        
+        # Print final results
+        print("\n" + "=" * 80)
+        print(f"📊 Enhanced Verification Test Results: {self.tests_passed}/{self.tests_run} tests passed")
+        print(f"✅ Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
+        
+        # Print failed tests
+        failed_tests = [r for r in self.test_results if not r['success']]
+        if failed_tests:
+            print("\n❌ Failed Tests:")
+            for test in failed_tests:
+                print(f"   - {test['test']}: {test['message']}")
+        else:
+            print("\n🎉 All enhanced verification tests passed!")
+        
+        return len(failed_tests) == 0
 
     def test_ai_category_verification(self):
         """Test AI Category Verification feature"""
@@ -486,12 +856,12 @@ class EPasarAPITester:
         return self.tests_passed == self.tests_run
 
 def main():
-    """Main test execution"""
+    """Main test execution for enhanced verification system"""
     # Try localhost first, then check if there are other endpoints
     tester = EPasarAPITester("http://localhost:8001")
     
     try:
-        success = tester.run_all_tests()
+        success = tester.run_all_verification_tests()
         return 0 if success else 1
     except KeyboardInterrupt:
         print("\n⚠️ Tests interrupted by user")
