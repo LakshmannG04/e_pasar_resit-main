@@ -15,6 +15,7 @@ import sys
 import json
 import os
 import tempfile
+import jwt
 from datetime import datetime
 
 class CommunicationSystemTester:
