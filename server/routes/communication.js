@@ -243,7 +243,7 @@ router.get('/my-conversations', checkAuth(['User', 'Seller', 'Admin', 'SuperAdmi
             whereClause.Status = status;
         }
 
-        // MODIFIED ADMIN ACCESS: Admins only see reported conversations (conversations they're assigned to handle)
+        // UPDATED ADMIN ACCESS: Admins see both regular conversations AND assigned report conversations
         if (user.userAuth === 'Admin' || user.userAuth === 'SuperAdmin') {
             // Get report IDs where this admin is assigned
             const assignedReports = await REPORT.findAll({
@@ -255,9 +255,10 @@ router.get('/my-conversations', checkAuth(['User', 'Seller', 'Admin', 'SuperAdmi
             
             whereClause = {
                 [Op.or]: [
-                    { LodgedBy: user.id },
-                    { LodgedAgainst: user.id },
-                    { DisputeID: { [Op.in]: adminConversationIds } } // Only assigned admin conversations
+                    { LodgedBy: user.id },           // Conversations admin started
+                    { LodgedAgainst: user.id },      // Conversations directed to admin (seller contacting admin)
+                    { HandledBy: user.id },          // Conversations admin is handling
+                    { DisputeID: { [Op.in]: adminConversationIds } } // Assigned report conversations
                 ]
             };
         }
@@ -306,14 +307,14 @@ router.get('/conversation/:disputeId/messages', checkAuth(['User', 'Seller', 'Ad
         const { disputeId } = req.params;
         const user = req.user;
 
-        // Check if user has access to this conversation
+        // Check if user has access to this conversation - Updated for admin support
         const dispute = await DISPUTE.findOne({
             where: {
                 DisputeID: disputeId,
                 [Op.or]: [
-                    { LodgedBy: user.id },
-                    { LodgedAgainst: user.id },
-                    { HandledBy: user.id }
+                    { LodgedBy: user.id },           // User started the conversation
+                    { LodgedAgainst: user.id },      // Conversation directed to user (including admins)
+                    { HandledBy: user.id }           // User is handling the conversation
                 ]
             }
         });
@@ -380,14 +381,14 @@ router.post('/conversation/:disputeId/send-message', checkAuth(['User', 'Seller'
             });
         }
 
-        // Check if user has access to this conversation
+        // Check if user has access to this conversation - Updated for admin support
         const dispute = await DISPUTE.findOne({
             where: {
                 DisputeID: disputeId,
                 [Op.or]: [
-                    { LodgedBy: user.id },
-                    { LodgedAgainst: user.id },
-                    { HandledBy: user.id }
+                    { LodgedBy: user.id },           // User started the conversation
+                    { LodgedAgainst: user.id },      // Conversation directed to user (including admins)
+                    { HandledBy: user.id }           // User is handling the conversation
                 ]
             }
         });
