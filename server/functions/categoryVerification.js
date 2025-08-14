@@ -129,81 +129,153 @@ const MINIMUM_CONFIDENCE_THRESHOLD = 25;
 const RECOMMENDED_CONFIDENCE_THRESHOLD = 40;
 
 /**
- * Analyze product description and suggest category
+ * Enhanced product verification - checks if product is suitable for agricultural marketplace
  * @param {string} productName - Name of the product
  * @param {string} description - Product description
- * @returns {Object} - {suggestedCategory: number, confidence: number, reason: string}
+ * @returns {Object} - Verification result with approval status
  */
-const suggestCategory = async (productName, description) => {
+const verifyProductSuitability = async (productName, description) => {
     try {
-        // Combine product name and description for analysis
         const textToAnalyze = `${productName} ${description}`.toLowerCase();
         
+        // Step 1: Check for forbidden keywords (non-agricultural items)
+        const detectedForbiddenKeywords = [];
+        for (const forbiddenKeyword of forbiddenKeywords) {
+            if (textToAnalyze.includes(forbiddenKeyword)) {
+                detectedForbiddenKeywords.push(forbiddenKeyword);
+            }
+        }
+
+        // If forbidden keywords found, reject immediately
+        if (detectedForbiddenKeywords.length > 0) {
+            return {
+                approved: false,
+                reason: 'FORBIDDEN_PRODUCT',
+                message: `This product is not suitable for our agricultural marketplace. Detected non-agricultural items: ${detectedForbiddenKeywords.join(', ')}`,
+                confidence: 0,
+                suggestedCategory: null,
+                forbiddenKeywords: detectedForbiddenKeywords,
+                recommendation: 'Please list only agricultural products: fruits, vegetables, seeds, or spices.'
+            };
+        }
+
+        // Step 2: Analyze agricultural category match
         let bestMatch = {
-            categoryId: 1, // Default to fruits
+            categoryId: null,
             confidence: 0,
-            matchedKeywords: []
+            matchedKeywords: [],
+            score: 0
         };
 
-        // Check each category for keyword matches
+        // Check each agricultural category for keyword matches
         for (const [categoryId, categoryInfo] of Object.entries(categoryKeywords)) {
             const matchedKeywords = [];
             let score = 0;
 
-            // Check for keyword matches
+            // Check for keyword matches with weighted scoring
             for (const keyword of categoryInfo.keywords) {
                 if (textToAnalyze.includes(keyword)) {
                     matchedKeywords.push(keyword);
-                    // Give higher score for matches in product name
+                    // More sophisticated scoring system
                     if (productName.toLowerCase().includes(keyword)) {
-                        score += 3; // Product name match is more important
-                    } else {
-                        score += 1; // Description match
+                        score += 5; // Product name match is most important
+                    } else if (description.toLowerCase().includes(keyword)) {
+                        score += 2; // Description match
+                    }
+                    
+                    // Bonus for exact word matches (not just substring)
+                    const words = textToAnalyze.split(/\s+/);
+                    if (words.includes(keyword)) {
+                        score += 3; // Exact word match bonus
                     }
                 }
             }
 
-            // Calculate confidence based on matches
-            const confidence = Math.min((score / categoryInfo.keywords.length) * 100, 100);
+            // Enhanced confidence calculation
+            // Base confidence on match ratio and absolute score
+            const matchRatio = matchedKeywords.length / Math.min(categoryInfo.keywords.length, 20); // Cap at 20 to avoid dilution
+            const confidence = Math.min((matchRatio * 60) + (score * 2), 100);
 
             if (confidence > bestMatch.confidence) {
                 bestMatch = {
                     categoryId: parseInt(categoryId),
                     confidence: Math.round(confidence),
-                    matchedKeywords: matchedKeywords
+                    matchedKeywords: matchedKeywords,
+                    score: score
                 };
             }
         }
 
-        // If confidence is too low, provide general suggestion
-        if (bestMatch.confidence < 20) {
+        // Step 3: Determine approval based on confidence threshold
+        const isApproved = bestMatch.confidence >= MINIMUM_CONFIDENCE_THRESHOLD;
+        const isHighConfidence = bestMatch.confidence >= RECOMMENDED_CONFIDENCE_THRESHOLD;
+
+        if (!isApproved) {
             return {
-                suggestedCategory: 1, // Default to fruits
-                confidence: 10,
-                reason: "Low keyword match. Please manually select the most appropriate category.",
-                matchedKeywords: []
+                approved: false,
+                reason: 'LOW_AGRICULTURAL_MATCH',
+                message: `This product doesn't appear to be a suitable agricultural item (confidence: ${bestMatch.confidence}%). Please ensure your product is a fruit, vegetable, seed, or spice with a clear agricultural description.`,
+                confidence: bestMatch.confidence,
+                suggestedCategory: null,
+                matchedKeywords: bestMatch.matchedKeywords,
+                recommendation: 'Try using more specific agricultural terms in your product name and description. Include words like "fresh", "organic", "grown", "harvest", etc.'
             };
         }
 
         const categoryName = categoryKeywords[bestMatch.categoryId].name;
         
         return {
-            suggestedCategory: bestMatch.categoryId,
+            approved: true,
+            reason: isHighConfidence ? 'HIGH_CONFIDENCE_MATCH' : 'ACCEPTABLE_MATCH',
+            message: isHighConfidence 
+                ? `Excellent match! This product clearly belongs to the ${categoryName} category.`
+                : `Good match for ${categoryName} category, but consider adding more specific agricultural terms for better classification.`,
             confidence: bestMatch.confidence,
-            reason: `Based on keywords: ${bestMatch.matchedKeywords.join(', ')}`,
+            suggestedCategory: bestMatch.categoryId,
             categoryName: categoryName,
-            matchedKeywords: bestMatch.matchedKeywords
+            matchedKeywords: bestMatch.matchedKeywords,
+            thresholdInfo: {
+                minimum: MINIMUM_CONFIDENCE_THRESHOLD,
+                recommended: RECOMMENDED_CONFIDENCE_THRESHOLD,
+                achieved: bestMatch.confidence
+            }
         };
 
     } catch (error) {
-        console.error('Error in category suggestion:', error);
+        console.error('Error in product verification:', error);
         return {
-            suggestedCategory: 1,
+            approved: false,
+            reason: 'SYSTEM_ERROR',
+            message: "Error analyzing product. Please try again or contact support.",
             confidence: 0,
-            reason: "Error in analysis. Please select category manually.",
+            suggestedCategory: null,
             matchedKeywords: []
         };
     }
+};
+
+/**
+ * Legacy function for backward compatibility - now uses enhanced verification
+ * @param {string} productName - Name of the product
+ * @param {string} description - Product description
+ * @returns {Object} - Category suggestion with approval info
+ */
+const suggestCategory = async (productName, description) => {
+    const verificationResult = await verifyProductSuitability(productName, description);
+    
+    // Convert to legacy format but include approval info
+    return {
+        suggestedCategory: verificationResult.suggestedCategory || 1,
+        confidence: verificationResult.confidence,
+        reason: verificationResult.message,
+        categoryName: verificationResult.categoryName || 'Unknown',
+        matchedKeywords: verificationResult.matchedKeywords || [],
+        // New fields for enhanced verification
+        approved: verificationResult.approved,
+        verificationReason: verificationResult.reason,
+        recommendation: verificationResult.recommendation,
+        forbiddenKeywords: verificationResult.forbiddenKeywords
+    };
 };
 
 /**
