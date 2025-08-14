@@ -205,6 +205,29 @@ export default function CommunicationSystem() {
     }
   };
 
+  const contactAdmin = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.post(Endpoint.createDispute, {
+        title: 'Contact Admin',
+        description: 'I need assistance from an administrator.',
+        targetUsername: 'admin' // This should be the admin username
+      }, {
+        headers: { Authorization: `Bearer ${getToken("token")}` }
+      });
+
+      if (response.status === 200) {
+        alert('✅ Admin contact request sent successfully!');
+        fetchConversations();
+      }
+    } catch (error: any) {
+      console.error('Error contacting admin:', error);
+      alert(error.response?.data?.message || 'Failed to contact admin');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const selectConversation = (conversation: Conversation) => {
     setSelectedConversation(conversation);
     fetchMessages(conversation.DisputeID);
