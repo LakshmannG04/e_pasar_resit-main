@@ -97,6 +97,9 @@ export default function ProductPage({product, productImage}:any) {
 
   // Fetch recommendations when component mounts
   useEffect(() => {
+    // Set mounted to true to prevent hydration mismatch
+    setMounted(true);
+    
     const fetchRecommendations = async () => {
       try {
         const response = await axios.get(`${Endpoint.products}/recommendations/product/${product.ProductID}`);
