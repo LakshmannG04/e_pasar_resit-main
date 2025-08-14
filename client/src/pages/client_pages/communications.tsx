@@ -41,15 +41,22 @@ export default function CommunicationSystem() {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [userRole, setUserRole] = useState<string>('');
 
-  // Create new conversation states
+  // Create new conversation states (for admins only)
   const [newConversationTitle, setNewConversationTitle] = useState('');
   const [newConversationDescription, setNewConversationDescription] = useState('');
   const [targetUsername, setTargetUsername] = useState('');
   const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+
+  // Report conversation states
+  const [reportTitle, setReportTitle] = useState('');
+  const [reportDescription, setReportDescription] = useState('');
+  const [reportAttachments, setReportAttachments] = useState<File[]>([]);
 
   useEffect(() => {
     fetchConversations();
