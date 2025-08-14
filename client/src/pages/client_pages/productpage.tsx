@@ -370,8 +370,8 @@ export default function ProductPage({product, productImage}:any) {
           </div>
         </section>
 
-        {/* Recommendations Section */}
-        {recommendations.length > 0 && (
+        {/* Recommendations Section - Only render after mount to prevent hydration mismatch */}
+        {mounted && recommendations.length > 0 && (
           <section className="py-12 bg-white">
             <div className="container mx-auto px-4">
               <h2 className="text-2xl font-bold text-gray-800 mb-8 text-center">
