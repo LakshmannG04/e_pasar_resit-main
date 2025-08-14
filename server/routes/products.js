@@ -99,22 +99,66 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
-// checks if necessary fields are provided
-// checks if category provided is valid
+// Enhanced product validation with agricultural verification
 const validateProduct = async (req, res, next) => {
-  const { productName, price, category } = req.body;
+  const { productName, price, category, description } = req.body;
 
   if (!productName || !price || !category) {
     return res.status(403).json({ status: 403, message: 'Required fields not provided' });
   }
 
   try {
-    await CATEGORY.findOne({ where: { CategoryID: category } });
-  } catch (err) {
-    return res.status(404).json({ status: 404, message: 'Invalid category' });
-  }
+    // Check if category exists
+    const categoryExists = await CATEGORY.findOne({ where: { CategoryID: category } });
+    if (!categoryExists) {
+      return res.status(404).json({ status: 404, message: 'Invalid category' });
+    }
 
-  next();
+    // Enhanced Agricultural Product Verification
+    const productDescription = description || 'No description available';
+    const verificationResult = await verifyProductSuitability(productName, productDescription);
+
+    if (!verificationResult.approved) {
+      return res.status(422).json({ 
+        status: 422, 
+        message: 'Product not approved for agricultural marketplace',
+        error: 'PRODUCT_VERIFICATION_FAILED',
+        details: {
+          reason: verificationResult.reason,
+          message: verificationResult.message,
+          confidence: verificationResult.confidence,
+          recommendation: verificationResult.recommendation,
+          forbiddenKeywords: verificationResult.forbiddenKeywords,
+          matchedKeywords: verificationResult.matchedKeywords
+        }
+      });
+    }
+
+    // If approved but suggested category differs from selected, warn the user
+    if (verificationResult.suggestedCategory && 
+        verificationResult.suggestedCategory !== parseInt(category) && 
+        verificationResult.confidence > 40) {
+      
+      req.categoryWarning = {
+        suggestedCategory: verificationResult.suggestedCategory,
+        suggestedCategoryName: verificationResult.categoryName,
+        confidence: verificationResult.confidence,
+        message: `Our AI suggests this product might fit better in the ${verificationResult.categoryName} category (${verificationResult.confidence}% confidence)`
+      };
+    }
+
+    // Store verification result for use in product creation
+    req.verificationResult = verificationResult;
+    next();
+
+  } catch (err) {
+    console.error('Error in product validation:', err);
+    return res.status(500).json({ 
+      status: 500, 
+      message: 'Error validating product. Please try again.',
+      error: 'VALIDATION_ERROR'
+    });
+  }
 };
 
 // ACTUAL POST route to create a new product
