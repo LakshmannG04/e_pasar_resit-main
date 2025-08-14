@@ -95,32 +95,11 @@ class EPasarAITester:
         return False, None
 
     def create_test_user(self):
-        """Create a test seller user for authentication"""
-        print("\n👤 Creating test seller user...")
+        """Login with existing test seller user"""
+        print("\n👤 Logging in with test seller user...")
         
-        test_user_data = {
-            "username": "ai_test_seller",
-            "password": "testpass123",
-            "firstName": "AI",
-            "lastName": "Tester",
-            "email": "ai.tester@example.com",
-            "phoneNumber": "1234567890",
-            "userAuth": "Seller"
-        }
-        
-        success, response = self.run_test(
-            "Create Test Seller User",
-            "POST",
-            "signup",
-            200,
-            data=test_user_data
-        )
-        
-        if success:
-            return self.test_login("ai_test_seller", "testpass123")
-        else:
-            # Try to login with existing user
-            return self.test_login("ai_test_seller", "testpass123")
+        # Try to login with existing seller_test user
+        return self.test_login("seller_test", "seller123")
 
     def test_ai_category_verification(self):
         """Test AI Category Verification System"""
