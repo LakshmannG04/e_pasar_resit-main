@@ -319,11 +319,11 @@ class EPasarCommunicationTester:
         """Test 5: Test Admin Workload Distribution - Load balancing"""
         print("\n⚖️ Testing Admin Workload Distribution...")
         
-        # Login as SuperAdmin to access workload endpoint (only SuperAdmin can access this)
-        superadmin_login_success, _ = self.test_login("SuperAdmin", "admin123")
+        # Login as admin_test to access workload endpoint (admin_test should have access)
+        admin_login_success, _ = self.test_login("admin_test", "admin123")
         
-        if not superadmin_login_success:
-            self.log_test("Admin Workload Distribution", False, "Failed to login as SuperAdmin")
+        if not admin_login_success:
+            self.log_test("Admin Workload Distribution", False, "Failed to login as admin_test")
             return
         
         success, response = self.run_test(
