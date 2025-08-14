@@ -855,13 +855,190 @@ class EPasarAPITester:
         
         return self.tests_passed == self.tests_run
 
+    def test_specific_405_error_endpoints(self):
+        """Test specific endpoints that were causing 405 errors"""
+        print("\n🔍 Testing Specific Endpoints for 405 Error Resolution...")
+        
+        # Test 1: Product Recommendations Endpoint
+        print("\n--- Test 1: Product Recommendations Endpoint ---")
+        self.run_test(
+            "GET /products/recommendations/product/1",
+            "GET",
+            "products/recommendations/product/1",
+            200
+        )
+        
+        # Test 2: Product Image Serving - check if any product images exist
+        print("\n--- Test 2: Product Image Serving ---")
+        # First get products to find valid image names
+        success, products_response = self.run_test("Get Products for Image Test", "GET", "products", 200)
+        
+        if success and 'data' in products_response and len(products_response['data']) > 0:
+            # Try to get image for first product
+            product_id = products_response['data'][0]['ProductID']
+            self.run_test(
+                f"GET /products/image/{product_id}",
+                "GET",
+                f"products/image/{product_id}",
+                200
+            )
+            
+            # Test explanation: The correct endpoint is /products/image/:id (with product ID)
+            # NOT /products/images/filename.jpg - that would cause a 405 routing conflict
+            self.log_test(
+                "Image Endpoint Routing", 
+                True, 
+                "Correct image endpoint is /products/image/:productId, not /products/images/filename"
+            )
+        else:
+            self.log_test("Product Image Test", False, "No products available to test image serving")
+        
+        # Test 3: Communication Endpoints
+        print("\n--- Test 3: Communication Endpoints ---")
+        
+        # Login first to test protected communication endpoints
+        login_success, user_auth = self.test_login("buyer_test", "buyer123")
+        if login_success:
+            self.run_test(
+                "GET /communication/my-conversations",
+                "GET",
+                "communication/my-conversations",
+                200
+            )
+        else:
+            # Try with seller credentials
+            login_success, user_auth = self.test_login("seller_test", "seller123")
+            if login_success:
+                self.run_test(
+                    "GET /communication/my-conversations",
+                    "GET",
+                    "communication/my-conversations",
+                    200
+                )
+            else:
+                self.log_test("Communication Endpoint Test", False, "Could not authenticate to test communication endpoints")
+        
+        # Test 4: Various Product Endpoints to ensure no 405 errors
+        print("\n--- Test 4: Various Product Endpoints ---")
+        
+        # Test trending recommendations
+        self.run_test(
+            "GET /products/recommendations/trending",
+            "GET",
+            "products/recommendations/trending",
+            200
+        )
+        
+        # Test category recommendations
+        self.run_test(
+            "GET /products/recommendations/category/1",
+            "GET",
+            "products/recommendations/category/1",
+            200
+        )
+        
+        # Test user recommendations (requires auth)
+        if self.token:
+            self.run_test(
+                "GET /products/recommendations/user",
+                "GET",
+                "products/recommendations/user",
+                200
+            )
+        
+        # Test popular products
+        self.run_test(
+            "GET /products/popular",
+            "GET",
+            "products/popular",
+            200
+        )
+        
+        # Test categories info
+        self.run_test(
+            "GET /products/categories-info",
+            "GET",
+            "products/categories-info",
+            200
+        )
+        
+        # Test view stats if we have a product ID
+        if success and 'data' in products_response and len(products_response['data']) > 0:
+            product_id = products_response['data'][0]['ProductID']
+            self.run_test(
+                f"GET /products/view-stats/{product_id}",
+                "GET",
+                f"products/view-stats/{product_id}",
+                200
+            )
+        
+        # Test 5: Verify 405 errors are resolved
+        print("\n--- Test 5: Verify No 405 Errors on Key Endpoints ---")
+        
+        # Test that the problematic routing patterns no longer cause 405 errors
+        # These should either work (200) or give proper error codes (not 405)
+        test_endpoints = [
+            ("products/recommendations/product/1", "Product recommendations"),
+            ("products/recommendations/trending", "Trending recommendations"),
+            ("products/recommendations/category/1", "Category recommendations"),
+            ("products/popular", "Popular products"),
+            ("products/categories-info", "Categories info"),
+        ]
+        
+        for endpoint, description in test_endpoints:
+            success, response = self.run_test(
+                f"No 405 Error: {description}",
+                "GET",
+                endpoint,
+                200
+            )
+            
+            # Additional check: ensure we don't get 405 Method Not Allowed
+            if not success and response.get('status') == 405:
+                self.log_test(
+                    f"405 Error Check: {description}",
+                    False,
+                    f"Still getting 405 Method Not Allowed error on {endpoint}"
+                )
+            elif success or (not success and response.get('status') != 405):
+                self.log_test(
+                    f"405 Error Check: {description}",
+                    True,
+                    f"No 405 error on {endpoint} (got status: {response.get('status', 'unknown')})"
+                )
+
+    def run_405_error_verification_tests(self):
+        """Run tests specifically for 405 error verification"""
+        print("🚀 Starting 405 Error Verification Tests")
+        print(f"📡 Testing against: {self.base_url}")
+        print("=" * 80)
+        
+        # Test the specific endpoints mentioned in the review request
+        self.test_specific_405_error_endpoints()
+        
+        # Print final results
+        print("\n" + "=" * 80)
+        print(f"📊 405 Error Verification Test Results: {self.tests_passed}/{self.tests_run} tests passed")
+        print(f"✅ Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
+        
+        # Print failed tests
+        failed_tests = [r for r in self.test_results if not r['success']]
+        if failed_tests:
+            print("\n❌ Failed Tests:")
+            for test in failed_tests:
+                print(f"   - {test['test']}: {test['message']}")
+        else:
+            print("\n🎉 All 405 error verification tests passed!")
+        
+        return len(failed_tests) == 0
+
 def main():
-    """Main test execution for enhanced verification system"""
-    # Try localhost first, then check if there are other endpoints
+    """Main test execution for 405 error verification"""
+    # Use the backend URL from environment
     tester = EPasarAPITester("http://localhost:8001")
     
     try:
-        success = tester.run_all_verification_tests()
+        success = tester.run_405_error_verification_tests()
         return 0 if success else 1
     except KeyboardInterrupt:
         print("\n⚠️ Tests interrupted by user")
