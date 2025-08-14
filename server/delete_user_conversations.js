@@ -1,5 +1,5 @@
 // Delete specific conversations for seller_test and buyer_test
-const { DISPUTE, DISPUTE_MSG, USERS } = require('./models');
+const { DISPUTE, DISPUTE_MSG, USERS, Op } = require('./models');
 
 async function deleteUserConversations() {
     try {
@@ -25,7 +25,7 @@ async function deleteUserConversations() {
         // Find conversations involving seller_test (3 conversations to delete)
         const sellerConversations = await DISPUTE.findAll({
             where: {
-                $or: [
+                [Op.or]: [
                     { LodgedBy: sellerTest.UserID },
                     { LodgedAgainst: sellerTest.UserID }
                 ]
@@ -37,7 +37,7 @@ async function deleteUserConversations() {
         // Find conversations involving buyer_test (2 conversations to delete)  
         const buyerConversations = await DISPUTE.findAll({
             where: {
-                $or: [
+                [Op.or]: [
                     { LodgedBy: buyerTest.UserID },
                     { LodgedAgainst: buyerTest.UserID }
                 ]
@@ -60,7 +60,7 @@ async function deleteUserConversations() {
         // Delete conversations
         const sellerDeleteCount = await DISPUTE.destroy({
             where: {
-                $or: [
+                [Op.or]: [
                     { LodgedBy: sellerTest.UserID },
                     { LodgedAgainst: sellerTest.UserID }
                 ]
@@ -69,7 +69,7 @@ async function deleteUserConversations() {
         
         const buyerDeleteCount = await DISPUTE.destroy({
             where: {
-                $or: [
+                [Op.or]: [
                     { LodgedBy: buyerTest.UserID },
                     { LodgedAgainst: buyerTest.UserID }
                 ]
