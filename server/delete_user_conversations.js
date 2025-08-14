@@ -1,5 +1,6 @@
 // Delete specific conversations for seller_test and buyer_test
-const { DISPUTE, DISPUTE_MSG, USERS, Op } = require('./models');
+const { DISPUTE, DISPUTE_MSG, USERS, Sequelize } = require('./models');
+const { Op } = Sequelize;
 
 async function deleteUserConversations() {
     try {
