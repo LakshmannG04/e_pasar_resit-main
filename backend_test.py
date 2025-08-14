@@ -1829,12 +1829,40 @@ class EPasarAPITester:
         return success
 
 def main():
-    """Main test execution for report button functionality"""
+    """Main test execution"""
     # Use the backend URL from environment
     tester = EPasarAPITester("http://localhost:8001")
     
     try:
-        success = tester.run_report_functionality_tests()
+        # Check command line arguments for specific test types
+        if len(sys.argv) > 1:
+            test_type = sys.argv[1].lower()
+            
+            if test_type == "verification":
+                print("🔍 Running Enhanced Agricultural Product Verification Tests...")
+                success = tester.run_all_verification_tests()
+            elif test_type == "ai":
+                print("🤖 Running AI Features Tests...")
+                success = tester.run_ai_features_tests()
+            elif test_type == "405":
+                print("🔧 Running 405 Error Verification Tests...")
+                success = tester.run_405_error_verification_tests()
+            elif test_type == "hydration":
+                print("💧 Running Product Hydration Verification Tests...")
+                success = tester.run_product_hydration_tests()
+            elif test_type == "report":
+                print("📋 Running Report Button Functionality Tests...")
+                success = tester.run_report_functionality_tests()
+            elif test_type == "conversation":
+                print("💬 Creating Test Conversation for Report Button Testing...")
+                success = tester.run_conversation_creation_tests()
+            else:
+                print("❌ Unknown test type. Available options: verification, ai, 405, hydration, report, conversation")
+                success = False
+        else:
+            print("💬 Creating Test Conversation for Report Button Testing...")
+            success = tester.run_conversation_creation_tests()
+        
         return 0 if success else 1
     except KeyboardInterrupt:
         print("\n⚠️ Tests interrupted by user")
