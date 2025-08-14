@@ -44,6 +44,7 @@ export default function CommunicationSystem() {
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [userRole, setUserRole] = useState<string>('');
+  const [mounted, setMounted] = useState(false);
 
   // Create new conversation states (for admins only)
   const [newConversationTitle, setNewConversationTitle] = useState('');
