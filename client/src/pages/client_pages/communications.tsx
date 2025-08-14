@@ -57,25 +57,21 @@ export default function CommunicationSystem() {
     fetchConversations();
     fetchUnreadCount();
     
-    // Check for URL parameters to pre-fill contact form
-    const { contact, subject } = router.query;
-    if (contact && typeof contact === 'string') {
-      setTargetUsername(contact);
-      setShowCreateDialog(true);
+    // Check for direct conversation ID parameter (NEW STREAMLINED APPROACH)
+    const { conversation } = router.query;
+    if (conversation && typeof conversation === 'string') {
+      // Find and select the conversation directly
+      const conversationId = parseInt(conversation);
       
-      if (subject && typeof subject === 'string') {
-        // Decode URL-encoded subject
-        const decodedSubject = decodeURIComponent(subject);
-        setNewConversationTitle(decodedSubject);
-        setNewConversationDescription(`Hi, I'm interested in learning more about this product. Could you please provide more details?`);
-      }
-      
-      // Search for the user to pre-select them
-      if (contact.trim()) {
-        searchUsers(contact);
-      }
+      // Wait for conversations to load then select the specific one
+      setTimeout(() => {
+        const targetConversation = conversations.find(conv => conv.DisputeID === conversationId);
+        if (targetConversation) {
+          setSelectedConversation(targetConversation);
+        }
+      }, 1000);
     }
-  }, [router.query]);
+  }, [router.query, conversations]);
 
   const fetchConversations = async () => {
     try {
