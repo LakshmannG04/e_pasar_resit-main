@@ -1032,13 +1032,287 @@ class EPasarAPITester:
         
         return len(failed_tests) == 0
 
+    def test_product_hydration_verification(self):
+        """Test product page hydration verification as requested in review"""
+        print("\n🔍 Testing Product Page Hydration Verification...")
+        
+        # Test 1: Check Products in Database - GET /products
+        print("\n--- Test 1: Check Products in Database ---")
+        success, products_response = self.run_test(
+            "GET /products - List all products",
+            "GET",
+            "products",
+            200
+        )
+        
+        if success and 'data' in products_response:
+            products = products_response['data']
+            if len(products) > 0:
+                self.log_test(
+                    "Products Exist in Database", 
+                    True, 
+                    f"Found {len(products)} products in database"
+                )
+                
+                # Verify product data structure
+                first_product = products[0]
+                required_fields = ['ProductID', 'ProductName', 'Price', 'Description', 'Category']
+                missing_fields = [field for field in required_fields if field not in first_product]
+                
+                if not missing_fields:
+                    self.log_test(
+                        "Product Data Structure Complete", 
+                        True, 
+                        f"All required fields present: {required_fields}"
+                    )
+                else:
+                    self.log_test(
+                        "Product Data Structure Complete", 
+                        False, 
+                        f"Missing fields: {missing_fields}"
+                    )
+                
+                # Store first product ID for further testing
+                self.test_product_id = first_product.get('ProductID', 1)
+                
+            else:
+                self.log_test(
+                    "Products Exist in Database", 
+                    False, 
+                    "No products found in database"
+                )
+                self.test_product_id = 1  # Default fallback
+        else:
+            self.log_test(
+                "Products API Response", 
+                False, 
+                "Failed to get products from database"
+            )
+            self.test_product_id = 1  # Default fallback
+        
+        # Test 2: Test Specific Product - GET /products/product/1
+        print("\n--- Test 2: Test Specific Product Details ---")
+        success, product_response = self.run_test(
+            f"GET /products/product/{self.test_product_id} - Specific product details",
+            "GET",
+            f"products/product/{self.test_product_id}",
+            200
+        )
+        
+        if success and 'data' in product_response:
+            product_data = product_response['data']
+            
+            # Verify product has proper data
+            required_fields = ['ProductName', 'Price', 'Description']
+            missing_fields = [field for field in required_fields if field not in product_data or not product_data[field]]
+            
+            if not missing_fields:
+                self.log_test(
+                    "Specific Product Data Complete", 
+                    True, 
+                    f"Product has all required data: Name='{product_data.get('ProductName')}', Price=${product_data.get('Price')}"
+                )
+            else:
+                self.log_test(
+                    "Specific Product Data Complete", 
+                    False, 
+                    f"Missing or empty fields: {missing_fields}"
+                )
+            
+            # Check for seller information
+            if 'Seller' in product_data and product_data['Seller']:
+                seller_info = product_data['Seller']
+                seller_fields = ['Username', 'FirstName', 'LastName']
+                seller_missing = [field for field in seller_fields if field not in seller_info or not seller_info[field]]
+                
+                if not seller_missing:
+                    self.log_test(
+                        "Seller Information Present", 
+                        True, 
+                        f"Seller: {seller_info.get('FirstName')} {seller_info.get('LastName')} (@{seller_info.get('Username')})"
+                    )
+                else:
+                    self.log_test(
+                        "Seller Information Present", 
+                        False, 
+                        f"Missing seller fields: {seller_missing}"
+                    )
+            else:
+                self.log_test(
+                    "Seller Information Present", 
+                    False, 
+                    "No seller information found in product data"
+                )
+        
+        # Test 3: Test Recommendations API - GET /products/recommendations/product/1
+        print("\n--- Test 3: Test Recommendations API ---")
+        success, recommendations_response = self.run_test(
+            f"GET /products/recommendations/product/{self.test_product_id} - Product recommendations",
+            "GET",
+            f"products/recommendations/product/{self.test_product_id}",
+            200
+        )
+        
+        if success and 'data' in recommendations_response:
+            recommendations = recommendations_response['data']
+            
+            # Verify response format (should be array)
+            if isinstance(recommendations, list):
+                self.log_test(
+                    "Recommendations API Response Format", 
+                    True, 
+                    f"Response is array format with {len(recommendations)} recommendations"
+                )
+                
+                # Check if recommendations exist
+                if len(recommendations) > 0:
+                    self.log_test(
+                        "Recommendations Exist", 
+                        True, 
+                        f"Found {len(recommendations)} product recommendations"
+                    )
+                    
+                    # Verify recommendation structure
+                    first_rec = recommendations[0]
+                    rec_fields = ['ProductID', 'ProductName', 'Price']
+                    rec_missing = [field for field in rec_fields if field not in first_rec]
+                    
+                    if not rec_missing:
+                        self.log_test(
+                            "Recommendation Data Structure", 
+                            True, 
+                            f"Recommendations have proper structure: {rec_fields}"
+                        )
+                    else:
+                        self.log_test(
+                            "Recommendation Data Structure", 
+                            False, 
+                            f"Missing recommendation fields: {rec_missing}"
+                        )
+                else:
+                    self.log_test(
+                        "Recommendations Exist", 
+                        True, 
+                        "No recommendations found (acceptable for limited data)"
+                    )
+            else:
+                self.log_test(
+                    "Recommendations API Response Format", 
+                    False, 
+                    f"Expected array format, got: {type(recommendations)}"
+                )
+        
+        # Test 4: Verify Product Images
+        print("\n--- Test 4: Verify Product Images ---")
+        success, image_response = self.run_test(
+            f"GET /products/image/{self.test_product_id} - Product image serving",
+            "GET",
+            f"products/image/{self.test_product_id}",
+            200
+        )
+        
+        if success:
+            self.log_test(
+                "Product Images Available", 
+                True, 
+                f"Product image served successfully for product {self.test_product_id}"
+            )
+        else:
+            # Check if it's a 404 (no image) vs other error
+            if hasattr(image_response, 'get') and image_response.get('status') == 404:
+                self.log_test(
+                    "Product Images Available", 
+                    True, 
+                    f"Image endpoint working (404 expected for products without images)"
+                )
+            else:
+                self.log_test(
+                    "Product Images Available", 
+                    False, 
+                    f"Image serving endpoint not working properly"
+                )
+        
+        # Test 5: Additional Recommendations Endpoints
+        print("\n--- Test 5: Additional Recommendations Testing ---")
+        
+        # Test trending recommendations
+        success, trending_response = self.run_test(
+            "GET /products/recommendations/trending - Trending recommendations",
+            "GET",
+            "products/recommendations/trending",
+            200
+        )
+        
+        if success and 'data' in trending_response:
+            trending = trending_response['data']
+            if isinstance(trending, list):
+                self.log_test(
+                    "Trending Recommendations Format", 
+                    True, 
+                    f"Trending recommendations array with {len(trending)} items"
+                )
+            else:
+                self.log_test(
+                    "Trending Recommendations Format", 
+                    False, 
+                    f"Expected array, got: {type(trending)}"
+                )
+        
+        # Test category recommendations
+        success, category_response = self.run_test(
+            "GET /products/recommendations/category/1 - Category recommendations",
+            "GET",
+            "products/recommendations/category/1",
+            200
+        )
+        
+        if success and 'data' in category_response:
+            category_recs = category_response['data']
+            if isinstance(category_recs, list):
+                self.log_test(
+                    "Category Recommendations Format", 
+                    True, 
+                    f"Category recommendations array with {len(category_recs)} items"
+                )
+            else:
+                self.log_test(
+                    "Category Recommendations Format", 
+                    False, 
+                    f"Expected array, got: {type(category_recs)}"
+                )
+
+    def run_product_hydration_tests(self):
+        """Run tests specifically for product hydration verification"""
+        print("🚀 Starting Product Hydration Verification Tests")
+        print(f"📡 Testing against: {self.base_url}")
+        print("=" * 80)
+        
+        # Test the specific requirements from the review request
+        self.test_product_hydration_verification()
+        
+        # Print final results
+        print("\n" + "=" * 80)
+        print(f"📊 Product Hydration Test Results: {self.tests_passed}/{self.tests_run} tests passed")
+        print(f"✅ Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
+        
+        # Print failed tests
+        failed_tests = [r for r in self.test_results if not r['success']]
+        if failed_tests:
+            print("\n❌ Failed Tests:")
+            for test in failed_tests:
+                print(f"   - {test['test']}: {test['message']}")
+        else:
+            print("\n🎉 All product hydration verification tests passed!")
+        
+        return len(failed_tests) == 0
+
 def main():
-    """Main test execution for 405 error verification"""
+    """Main test execution for product hydration verification"""
     # Use the backend URL from environment
     tester = EPasarAPITester("http://localhost:8001")
     
     try:
-        success = tester.run_405_error_verification_tests()
+        success = tester.run_product_hydration_tests()
         return 0 if success else 1
     except KeyboardInterrupt:
         print("\n⚠️ Tests interrupted by user")
