@@ -91,33 +91,47 @@ export default function ProductPage({product, productImage}:any) {
   const [quan,setQuan]= useState('0');
   const [recommendations, setRecommendations] = useState([]);
   const [recommendationImages, setRecommendationImages] = useState([]);
+  const [mounted, setMounted] = useState(false);
   const token = getToken('token');
   const image = productImage?.ProductImage || null;
 
   // Fetch recommendations when component mounts
   useEffect(() => {
+    // Set mounted to true to prevent hydration mismatch
+    setMounted(true);
+    
     const fetchRecommendations = async () => {
       try {
         const response = await axios.get(`${Endpoint.products}/recommendations/product/${product.ProductID}`);
         if (response.status === 200) {
           const recProducts = response.data.data;
-          setRecommendations(recProducts);
           
-          // Fetch images for recommendations
-          const images = [];
-          for (let recProduct of recProducts) {
-            try {
-              // Create image URL directly instead of fetching image data
-              const imageUrl = `${Endpoint.products}/images/${recProduct.ProductImage}`;
-              images.push({ProductID: recProduct.ProductID, ProductImage: imageUrl});
-            } catch (error) {
-              console.log("Error creating recommendation image URL:", error);
+          // Ensure recProducts is an array before iterating
+          if (Array.isArray(recProducts)) {
+            setRecommendations(recProducts);
+            
+            // Fetch images for recommendations
+            const images = [];
+            for (let recProduct of recProducts) {
+              try {
+                // Create image URL directly instead of fetching image data
+                const imageUrl = `${Endpoint.products}/images/${recProduct.ProductImage}`;
+                images.push({ProductID: recProduct.ProductID, ProductImage: imageUrl});
+              } catch (error) {
+                console.log("Error creating recommendation image URL:", error);
+              }
             }
+            setRecommendationImages(images);
+          } else {
+            console.log("Recommendations response is not an array:", recProducts);
+            setRecommendations([]);
+            setRecommendationImages([]);
           }
-          setRecommendationImages(images);
         }
       } catch (error) {
         console.log("Error fetching recommendations:", error);
+        setRecommendations([]);
+        setRecommendationImages([]);
       }
     };
 
@@ -296,7 +310,8 @@ export default function ProductPage({product, productImage}:any) {
                               {product.Seller.UserAuth}
                             </span>
                           </div>
-                          {token && (
+                          {/* Contact Seller Button - Only render after mount to prevent hydration mismatch */}
+                          {mounted && token && (
                             <div>
                               <button
                                 onClick={() => handleContactSeller(product.Seller.UserID, product.ProductID)}
@@ -355,8 +370,8 @@ export default function ProductPage({product, productImage}:any) {
           </div>
         </section>
 
-        {/* Recommendations Section */}
-        {recommendations.length > 0 && (
+        {/* Recommendations Section - Only render after mount to prevent hydration mismatch */}
+        {mounted && recommendations.length > 0 && (
           <section className="py-12 bg-white">
             <div className="container mx-auto px-4">
               <h2 className="text-2xl font-bold text-gray-800 mb-8 text-center">
