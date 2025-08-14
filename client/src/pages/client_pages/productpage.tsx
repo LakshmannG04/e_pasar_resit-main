@@ -91,6 +91,7 @@ export default function ProductPage({product, productImage}:any) {
   const [quan,setQuan]= useState('0');
   const [recommendations, setRecommendations] = useState([]);
   const [recommendationImages, setRecommendationImages] = useState([]);
+  const [mounted, setMounted] = useState(false);
   const token = getToken('token');
   const image = productImage?.ProductImage || null;
 
