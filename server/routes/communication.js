@@ -247,13 +247,21 @@ router.get('/my-conversations', checkAuth(['User', 'Seller', 'Admin', 'SuperAdmi
             whereClause.Status = status;
         }
 
-        // Admins can see all disputes they're handling
+        // MODIFIED ADMIN ACCESS: Admins only see reported conversations (conversations they're assigned to handle)
         if (user.userAuth === 'Admin' || user.userAuth === 'SuperAdmin') {
+            // Get report IDs where this admin is assigned
+            const assignedReports = await REPORT.findAll({
+                where: { AssignedAdminID: user.id },
+                attributes: ['AdminConversationID']
+            });
+
+            const adminConversationIds = assignedReports.map(report => report.AdminConversationID).filter(id => id !== null);
+            
             whereClause = {
                 [Op.or]: [
                     { LodgedBy: user.id },
                     { LodgedAgainst: user.id },
-                    { HandledBy: user.id }
+                    { DisputeID: { [Op.in]: adminConversationIds } } // Only assigned admin conversations
                 ]
             };
         }
