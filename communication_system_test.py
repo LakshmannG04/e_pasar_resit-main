@@ -195,7 +195,7 @@ class EPasarCommunicationTester:
         
         # Test contact seller endpoint
         contact_data = {
-            "sellerId": 3,  # Assuming seller_test has ID 3
+            "sellerId": 3,  # seller_test has ID 3
             "productId": 1,
             "initialMessage": "Hi there!"
         }
