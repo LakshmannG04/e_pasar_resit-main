@@ -120,7 +120,7 @@ class ConversationDeletionTester:
             # Execute the script
             print("\n🚀 Running deletion script...")
             result = subprocess.run(
-                ["node", "delete_user_conversations.js"],
+                ["node", "delete_user_conversations_fixed.js"],
                 cwd=server_dir,
                 capture_output=True,
                 text=True,
