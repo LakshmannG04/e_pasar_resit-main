@@ -1245,18 +1245,19 @@ class EPasarAPITester:
         )
         
         if success and 'data' in trending_response:
-            trending = trending_response['data']
-            if isinstance(trending, list):
+            trending_data = trending_response['data']
+            if 'recommendations' in trending_data and isinstance(trending_data['recommendations'], list):
+                trending = trending_data['recommendations']
                 self.log_test(
                     "Trending Recommendations Format", 
                     True, 
-                    f"Trending recommendations array with {len(trending)} items"
+                    f"Trending recommendations proper structure with {len(trending)} items"
                 )
             else:
                 self.log_test(
                     "Trending Recommendations Format", 
                     False, 
-                    f"Expected array, got: {type(trending)}"
+                    f"Expected object with 'recommendations' array, got: {type(trending_data)}"
                 )
         
         # Test category recommendations
@@ -1268,18 +1269,19 @@ class EPasarAPITester:
         )
         
         if success and 'data' in category_response:
-            category_recs = category_response['data']
-            if isinstance(category_recs, list):
+            category_data = category_response['data']
+            if 'recommendations' in category_data and isinstance(category_data['recommendations'], list):
+                category_recs = category_data['recommendations']
                 self.log_test(
                     "Category Recommendations Format", 
                     True, 
-                    f"Category recommendations array with {len(category_recs)} items"
+                    f"Category recommendations proper structure with {len(category_recs)} items"
                 )
             else:
                 self.log_test(
                     "Category Recommendations Format", 
                     False, 
-                    f"Expected array, got: {type(category_recs)}"
+                    f"Expected object with 'recommendations' array, got: {type(category_data)}"
                 )
 
     def run_product_hydration_tests(self):
