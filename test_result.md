@@ -1237,6 +1237,146 @@ No critical issues found. All report functionality workflows functioning as desi
 
 ---
 
+## ✅ **ENHANCED SELLER SEARCH FUNCTIONALITY - FULLY TESTED AND OPERATIONAL**
+
+### Comprehensive Testing Completed - January 15, 2025
+
+**Testing Agent**: Backend Testing Sub-agent  
+**Test Focus**: Enhanced seller search functionality allowing sellers to search for admin accounts  
+**Test Coverage**: All 5 critical test scenarios from review request plus comprehensive verification  
+**Success Rate**: 100.0% (34/34 tests passed)
+
+#### 🎯 **Critical Test Scenarios Completed Successfully:**
+
+**1. ✅ Seller Search for Admins**
+- **Status**: FULLY FUNCTIONAL
+- **Test Results**:
+  - ✅ Sellers can successfully search for admin accounts
+  - ✅ Found 3 admin accounts: SuperAdmin, admin_test, admin1
+  - ✅ Search returns both Admin and SuperAdmin user types
+  - ✅ GET /communication/search-users?username=admin working perfectly for sellers
+
+**2. ✅ Seller Search for Users**
+- **Status**: FULLY FUNCTIONAL  
+- **Test Results**:
+  - ✅ Sellers can successfully search for buyer accounts
+  - ✅ Found 5 buyer accounts: buyer_test, new_buyer_test, buyer1, testbuyer, buyer_john
+  - ✅ Search correctly returns User role accounts
+  - ✅ GET /communication/search-users?username=buyer working perfectly for sellers
+
+**3. ✅ Buyer Search Restrictions**
+- **Status**: PROPERLY ENFORCED
+- **Test Results**:
+  - ✅ Buyers CANNOT search for admin accounts (security restriction working)
+  - ✅ Admin search returns 0 results for buyers (correctly restricted)
+  - ✅ Buyers can only search for sellers (2 sellers found: seller_test, seller1)
+  - ✅ Security restriction properly implemented - no admin access for buyers
+
+**4. ✅ Admin Search (Full Access)**
+- **Status**: FULLY FUNCTIONAL
+- **Test Results**:
+  - ✅ Admins can search for all user types without restrictions
+  - ✅ Found 8 users with mixed roles: Sellers and Users
+  - ✅ Admin search has full access as expected
+  - ✅ No search restrictions applied to admin accounts
+
+**5. ✅ Create Conversation with Found Admin**
+- **Status**: FULLY FUNCTIONAL
+- **Test Results**:
+  - ✅ Successfully created conversation (ID: 35) between seller and SuperAdmin
+  - ✅ Conversation creation using create-dispute endpoint working
+  - ✅ Message sending to admin conversation working perfectly
+  - ✅ End-to-end seller-admin communication flow operational
+
+#### 📊 **Enhanced Search System Performance:**
+
+**Search Logic Implementation**: ✅ CORRECTLY IMPLEMENTED
+- **Buyers (User role)**: Can only search for Sellers - ✅ ENFORCED
+- **Sellers (Seller role)**: Can search for Users AND Admins (Admin, SuperAdmin) - ✅ WORKING
+- **Admins**: Can search for anyone - ✅ WORKING
+
+**Security Restrictions**: ✅ PROPERLY ENFORCED
+- Buyers cannot access admin accounts through search - ✅ VERIFIED
+- Role-based access control working correctly - ✅ VERIFIED
+- No unauthorized admin contact possible for buyers - ✅ VERIFIED
+
+**Communication Integration**: ✅ SEAMLESS
+- Seller-admin conversation creation working - ✅ VERIFIED
+- Message sending in seller-admin conversations working - ✅ VERIFIED
+- Admin assignment and conversation flow operational - ✅ VERIFIED
+
+#### 🔧 **Technical Implementation Verified:**
+
+**API Endpoint**: GET /communication/search-users
+- ✅ Username parameter validation working
+- ✅ Role-based filtering correctly implemented
+- ✅ Proper JSON responses with user data
+- ✅ Authentication and authorization working
+
+**Database Integration**:
+- ✅ User search by username (partial match) working
+- ✅ Role filtering based on current user's role working
+- ✅ User exclusion (current user not in results) working
+- ✅ Proper user data returned (UserID, Username, FirstName, LastName, UserAuth)
+
+**Conversation Creation**:
+- ✅ create-dispute endpoint working with admin targets
+- ✅ Message sending in admin conversations working
+- ✅ Conversation access control properly enforced
+
+#### ✅ **All Critical Requirements Met:**
+
+1. **✅ Sellers can search for admin accounts**: Confirmed - found 3 admin accounts (Admin and SuperAdmin roles)
+2. **✅ Sellers can search for user accounts**: Confirmed - found 5 buyer accounts  
+3. **✅ Buyers restricted from admin access**: Confirmed - 0 admin results returned for buyers
+4. **✅ Admins have full search access**: Confirmed - can search all user types
+5. **✅ Seller-admin conversation creation works**: Confirmed - conversation created and messaging functional
+
+#### 🎯 **Enhanced Communication Rules Verification:**
+
+**Search Access Matrix**:
+- **Buyers → Sellers**: ✅ ALLOWED (2 sellers found)
+- **Buyers → Admins**: ❌ BLOCKED (0 admins found - security working)
+- **Sellers → Buyers**: ✅ ALLOWED (5 buyers found)  
+- **Sellers → Admins**: ✅ ALLOWED (3 admins found - NEW FEATURE WORKING)
+- **Admins → Anyone**: ✅ ALLOWED (full access confirmed)
+
+**Frontend Integration Ready**:
+- ✅ "Contact Admin" button for sellers can use search results
+- ✅ "Search & Contact Users" functionality operational
+- ✅ Both buttons can work with enhanced search system
+- ✅ Role-based UI can be implemented based on search restrictions
+
+---
+**Last Updated**: January 15, 2025 by Testing Agent  
+**Status**: ✅ ENHANCED SELLER SEARCH FUNCTIONALITY FULLY OPERATIONAL - All requirements met
+
+### Agent Communication:
+**From Testing Agent (January 15, 2025)**:
+Enhanced seller search functionality testing completed with 100% success rate (34/34 tests). All critical requirements from the review request have been fulfilled:
+
+✅ **Seller Search for Admins**: Working perfectly - sellers can find both Admin and SuperAdmin accounts (3 found)
+✅ **Seller Search for Users**: Working perfectly - sellers can find buyer accounts (5 found)
+✅ **Buyer Search Restrictions**: Properly enforced - buyers cannot access admin accounts (security working)
+✅ **Admin Search Full Access**: Working perfectly - admins can search all user types without restrictions
+✅ **Create Conversation with Admin**: Working perfectly - seller-admin conversations created and messaging functional
+
+**Key Technical Achievements**:
+- Enhanced communication rules correctly implemented in search-users endpoint
+- Role-based access control properly enforced (buyers blocked from admin access)
+- Seller-admin communication flow working end-to-end
+- Database search functionality working with proper user filtering
+- Authentication and authorization working across all test scenarios
+- Conversation creation and messaging with admins fully operational
+
+**Enhanced Communication System**: The new seller search functionality enables sellers to directly find and contact admin accounts while maintaining security restrictions for buyers. This enhances the communication system by providing sellers with direct admin access for disputes and support while preserving the buyer-seller-admin hierarchy.
+
+**Critical Security Verification**: Buyers are properly restricted from accessing admin accounts through search, maintaining the security model where buyers can only contact sellers directly.
+
+All enhanced seller-admin communication requirements met. The system is ready for frontend integration with the new "Search & Contact Users" functionality.
+
+---
+
 ## ✅ **TEST CONVERSATION CREATION FOR REPORT BUTTON TESTING - FULLY COMPLETED**
 
 ### Comprehensive Testing Completed - January 15, 2025

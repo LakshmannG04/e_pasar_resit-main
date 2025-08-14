@@ -114,26 +114,22 @@ router.get('/search-users', checkAuth(['User', 'Seller', 'Admin', 'SuperAdmin'])
             }
         };
 
-        // Communication rules: 
-        // - Buyers/Sellers can contact each other
-        // - Users can only contact Admins if Admin contacted them first (we'll check this in create-dispute)
+        // Enhanced Communication rules: 
+        // - Buyers can contact Sellers only (not Admins directly)
+        // - Sellers can contact Buyers AND Admins (for disputes and support)
         // - Admins can contact anyone
-        if (currentUser.userAuth === 'User' || currentUser.userAuth === 'Seller') {
-            // Buyers and Sellers can search for Users and Sellers, but NOT Admins or SuperAdmins
+        if (currentUser.userAuth === 'User') {
+            // Buyers can only search for Sellers (not Admins)
             searchConditions.UserAuth = {
-                [Op.in]: ['User', 'Seller']
+                [Op.in]: ['Seller']
             };
-            
-            // Additional explicit exclusion of any admin roles for extra safety
+            console.log(`🔍 Buyer search by ${currentUser.username} - can find Sellers only`);
+        } else if (currentUser.userAuth === 'Seller') {
+            // Sellers can search for Buyers AND Admins (for disputes and support)
             searchConditions.UserAuth = {
-                [Op.and]: [
-                    { [Op.in]: ['User', 'Seller'] },
-                    { [Op.not]: 'Admin' },
-                    { [Op.not]: 'SuperAdmin' }
-                ]
+                [Op.in]: ['User', 'Admin', 'SuperAdmin']
             };
-            
-            console.log(`🔍 User search by ${currentUser.userAuth} (${currentUser.username}) - filtering out admin users`);
+            console.log(`🔍 Seller search by ${currentUser.username} - can find Buyers and Admins`);
         } else {
             // Admins and SuperAdmins can search for anyone
             console.log(`🔍 Admin user search by ${currentUser.userAuth} (${currentUser.username}) - no filtering`);

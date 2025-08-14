@@ -289,14 +289,23 @@ export default function CommunicationSystem() {
                     </div>
                     {/* Role-specific action buttons - Only render after mount to prevent hydration mismatch */}
                     {mounted && userRole === 'Seller' && (
-                      <button
-                        onClick={contactAdmin}
-                        disabled={loading}
-                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2"
-                      >
-                        <span>👨‍💼</span>
-                        <span>{loading ? 'Connecting...' : 'Contact Admin'}</span>
-                      </button>
+                      <div className="space-y-3">
+                        <button
+                          onClick={contactAdmin}
+                          disabled={loading}
+                          className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2"
+                        >
+                          <span>👨‍💼</span>
+                          <span>{loading ? 'Connecting...' : 'Contact Admin'}</span>
+                        </button>
+                        <button
+                          onClick={() => setShowCreateDialog(true)}
+                          className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-green-700 hover:to-blue-700 transition duration-200 flex items-center justify-center space-x-2"
+                        >
+                          <span>🔍</span>
+                          <span>Search & Contact Users</span>
+                        </button>
+                      </div>
                     )}
                     
                     {mounted && (userRole === 'Admin' || userRole === 'SuperAdmin') && (
