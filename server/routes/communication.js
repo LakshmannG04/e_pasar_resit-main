@@ -544,4 +544,351 @@ router.get('/unread-count', checkAuth(['User', 'Seller', 'Admin', 'SuperAdmin'])
     }
 });
 
+// NEW ENHANCED COMMUNICATION SYSTEM ENDPOINTS
+
+// Report a conversation
+router.post('/report-conversation', checkAuth(['User', 'Seller']), uploadReportAttachments.array('attachments', 5), async (req, res) => {
+    try {
+        const user = req.user;
+        const { conversationId, title, description, priority = 'Medium' } = req.body;
+
+        if (!conversationId || !description) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Conversation ID and description are required'
+            });
+        }
+
+        // Verify the conversation exists and user is part of it
+        const conversation = await DISPUTE.findOne({
+            where: {
+                DisputeID: conversationId,
+                [Op.or]: [
+                    { LodgedBy: user.id },
+                    { LodgedAgainst: user.id }
+                ]
+            }
+        });
+
+        if (!conversation) {
+            return res.status(404).json({
+                status: 404,
+                message: 'Conversation not found or you are not authorized to report it'
+            });
+        }
+
+        // Assign admin to handle this report
+        const assignedAdmin = await assignAdminToReport();
+        if (!assignedAdmin) {
+            return res.status(500).json({
+                status: 500,
+                message: 'No available admins to handle this report'
+            });
+        }
+
+        // Process attachments
+        let attachmentPaths = [];
+        if (req.files && req.files.length > 0) {
+            attachmentPaths = req.files.map(file => file.filename);
+        }
+
+        // Create the report
+        const report = await REPORT.create({
+            ReportedConversationID: conversationId,
+            ReportedBy: user.id,
+            AssignedAdminID: assignedAdmin.UserID,
+            ReportTitle: title || 'Conversation Report',
+            ReportDescription: description,
+            ReportAttachments: JSON.stringify(attachmentPaths),
+            Priority: priority
+        });
+
+        // Create admin conversation with the reporter
+        const adminConversation = await DISPUTE.create({
+            Title: `Report: ${title || 'Conversation Issue'}`,
+            Description: `Report submitted for conversation #${conversationId}`,
+            LodgedBy: user.id,
+            LodgedAgainst: assignedAdmin.UserID,
+            Priority: priority,
+            Status: 'Open'
+        });
+
+        // Update report with admin conversation ID
+        report.AdminConversationID = adminConversation.DisputeID;
+        await report.save();
+
+        // Create initial message in admin conversation with report details
+        const reportMessage = `**CONVERSATION REPORT**\n\n` +
+            `**Original Conversation ID:** ${conversationId}\n` +
+            `**Report Title:** ${title || 'Conversation Issue'}\n` +
+            `**Description:** ${description}\n` +
+            `**Priority:** ${priority}\n` +
+            `**Attachments:** ${attachmentPaths.length} file(s)\n\n` +
+            `This report has been automatically created. Please review the reported conversation and take appropriate action.`;
+
+        await DISPUTE_MSG.create({
+            DisputeID: adminConversation.DisputeID,
+            SentBy: user.id,
+            Message: reportMessage,
+            MessageType: 'system'
+        });
+
+        res.status(200).json({
+            status: 200,
+            message: `Report submitted successfully. You have been connected with admin ${assignedAdmin.Username} to discuss this issue.`,
+            data: {
+                report: report,
+                adminConversation: adminConversation,
+                assignedAdmin: {
+                    id: assignedAdmin.UserID,
+                    username: assignedAdmin.Username
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Error reporting conversation:', error);
+        res.status(500).json({
+            status: 500,
+            message: 'Error submitting report'
+        });
+    }
+});
+
+// Contact admin (for sellers)
+router.post('/contact-admin', checkAuth(['Seller']), async (req, res) => {
+    try {
+        const user = req.user;
+        const { subject = 'General Inquiry', message } = req.body;
+
+        if (!message) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Message is required'
+            });
+        }
+
+        // Assign a random admin
+        const assignedAdmin = await assignAdminToReport();
+        if (!assignedAdmin) {
+            return res.status(500).json({
+                status: 500,
+                message: 'No available admins at the moment'
+            });
+        }
+
+        // Create conversation with admin
+        const adminConversation = await DISPUTE.create({
+            Title: `Seller Inquiry: ${subject}`,
+            Description: `Seller inquiry from ${user.username}`,
+            LodgedBy: user.id,
+            LodgedAgainst: assignedAdmin.UserID,
+            Priority: 'Low',
+            Status: 'Open'
+        });
+
+        // Add the seller's message
+        await DISPUTE_MSG.create({
+            DisputeID: adminConversation.DisputeID,
+            SentBy: user.id,
+            Message: message,
+            MessageType: 'message'
+        });
+
+        res.status(200).json({
+            status: 200,
+            message: `Connected with admin ${assignedAdmin.Username}. Your inquiry has been sent.`,
+            data: {
+                conversationId: adminConversation.DisputeID,
+                assignedAdmin: {
+                    id: assignedAdmin.UserID,
+                    username: assignedAdmin.Username,
+                    name: `${assignedAdmin.FirstName} ${assignedAdmin.LastName}`
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Error contacting admin:', error);
+        res.status(500).json({
+            status: 500,
+            message: 'Error contacting admin'
+        });
+    }
+});
+
+// Direct contact seller (for buyers) - streamlined approach
+router.post('/contact-seller', checkAuth(['User']), async (req, res) => {
+    try {
+        const user = req.user;
+        const { sellerId, productId, initialMessage } = req.body;
+
+        if (!sellerId) {
+            return res.status(400).json({
+                status: 400,
+                message: 'Seller ID is required'
+            });
+        }
+
+        // Verify seller exists
+        const seller = await USERS.findOne({
+            where: { 
+                UserID: sellerId,
+                UserAuth: 'Seller'
+            }
+        });
+
+        if (!seller) {
+            return res.status(404).json({
+                status: 404,
+                message: 'Seller not found'
+            });
+        }
+
+        // Check if conversation already exists
+        const existingConversation = await DISPUTE.findOne({
+            where: {
+                [Op.or]: [
+                    { LodgedBy: user.id, LodgedAgainst: sellerId },
+                    { LodgedBy: sellerId, LodgedAgainst: user.id }
+                ]
+            }
+        });
+
+        if (existingConversation) {
+            // If initial message provided, add it to existing conversation
+            if (initialMessage) {
+                await DISPUTE_MSG.create({
+                    DisputeID: existingConversation.DisputeID,
+                    SentBy: user.id,
+                    Message: initialMessage,
+                    MessageType: 'message'
+                });
+            }
+
+            return res.status(200).json({
+                status: 200,
+                message: 'Redirected to existing conversation',
+                data: {
+                    conversationId: existingConversation.DisputeID,
+                    isNewConversation: false
+                }
+            });
+        }
+
+        // Create new conversation
+        const conversation = await DISPUTE.create({
+            Title: productId ? `Product Inquiry - Product #${productId}` : 'General Inquiry',
+            Description: `Buyer inquiry from ${user.username}`,
+            LodgedBy: user.id,
+            LodgedAgainst: sellerId,
+            Priority: 'Low',
+            Status: 'Open'
+        });
+
+        // Add initial message if provided
+        if (initialMessage) {
+            await DISPUTE_MSG.create({
+                DisputeID: conversation.DisputeID,
+                SentBy: user.id,
+                Message: initialMessage,
+                MessageType: 'message'
+            });
+        } else {
+            // Add system message
+            await DISPUTE_MSG.create({
+                DisputeID: conversation.DisputeID,
+                SentBy: user.id,
+                Message: `Conversation started with ${seller.FirstName} ${seller.LastName} (@${seller.Username})`,
+                MessageType: 'system'
+            });
+        }
+
+        res.status(200).json({
+            status: 200,
+            message: 'Conversation started with seller',
+            data: {
+                conversationId: conversation.DisputeID,
+                isNewConversation: true,
+                seller: {
+                    id: seller.UserID,
+                    username: seller.Username,
+                    name: `${seller.FirstName} ${seller.LastName}`
+                }
+            }
+        });
+
+    } catch (error) {
+        console.error('Error contacting seller:', error);
+        res.status(500).json({
+            status: 500,
+            message: 'Error starting conversation'
+        });
+    }
+});
+
+// Get report attachments
+router.get('/report-attachment/:filename', checkAuth(['Admin', 'SuperAdmin']), (req, res) => {
+    try {
+        const { filename } = req.params;
+        const filePath = path.join(reportAttachmentsPath, filename);
+        
+        if (!fs.existsSync(filePath)) {
+            return res.status(404).json({
+                status: 404,
+                message: 'Attachment not found'
+            });
+        }
+
+        res.sendFile(filePath);
+    } catch (error) {
+        console.error('Error serving attachment:', error);
+        res.status(500).json({
+            status: 500,
+            message: 'Error retrieving attachment'
+        });
+    }
+});
+
+// Get admin workload (for debugging/monitoring)
+router.get('/admin-workload', checkAuth(['SuperAdmin']), async (req, res) => {
+    try {
+        const admins = await USERS.findAll({
+            where: {
+                UserAuth: { [Op.in]: ['Admin', 'SuperAdmin'] }
+            },
+            attributes: ['UserID', 'Username', 'FirstName', 'LastName']
+        });
+
+        const workloadData = await Promise.all(
+            admins.map(async (admin) => {
+                const reportCount = await REPORT.count({
+                    where: {
+                        AssignedAdminID: admin.UserID,
+                        Status: { [Op.in]: ['Pending', 'Under Review'] }
+                    }
+                });
+
+                return {
+                    admin: admin,
+                    activeReports: reportCount
+                };
+            })
+        );
+
+        res.status(200).json({
+            status: 200,
+            message: 'Admin workload retrieved successfully',
+            data: workloadData
+        });
+
+    } catch (error) {
+        console.error('Error getting admin workload:', error);
+        res.status(500).json({
+            status: 500,
+            message: 'Error retrieving admin workload'
+        });
+    }
+});
+
 module.exports = router;
