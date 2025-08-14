@@ -253,12 +253,20 @@ class EPasarCommunicationTester:
         """Test 3: Test Report Conversation System - Report feature with attachments"""
         print("\n📋 Testing Report Conversation System...")
         
+        # Login as buyer first to ensure we have the right context
+        buyer_login_success, _ = self.test_login("buyer_test", "buyer123")
+        
+        if not buyer_login_success:
+            self.log_test("Report Conversation System", False, "Failed to login as buyer")
+            return
+        
         # First ensure we have a conversation to report
         if not self.created_conversations:
             self.log_test("Report Conversation System", False, "No conversations available to report")
             return
         
-        conversation_id = self.created_conversations[0]
+        # Use the most recent conversation ID
+        conversation_id = self.created_conversations[-1]  # Use the last created conversation
         
         # Create a test file for attachment
         test_file_content = "This is a test report attachment file."
@@ -270,7 +278,7 @@ class EPasarCommunicationTester:
             
             # Test report conversation with attachment
             report_data = {
-                "conversationId": conversation_id,
+                "conversationId": str(conversation_id),  # Ensure it's a string
                 "title": "Test Report",
                 "description": "Testing report system"
             }
