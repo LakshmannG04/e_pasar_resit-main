@@ -140,8 +140,12 @@ const verifyProductSuitability = async (productName, description) => {
         
         // Step 1: Check for forbidden keywords (non-agricultural items)
         const detectedForbiddenKeywords = [];
+        const words = textToAnalyze.split(/\s+/);
+        
         for (const forbiddenKeyword of forbiddenKeywords) {
-            if (textToAnalyze.includes(forbiddenKeyword)) {
+            // Use whole word matching to avoid false positives like "app" in "apples"
+            const regex = new RegExp(`\\b${forbiddenKeyword}\\b`, 'i');
+            if (regex.test(textToAnalyze)) {
                 detectedForbiddenKeywords.push(forbiddenKeyword);
             }
         }
