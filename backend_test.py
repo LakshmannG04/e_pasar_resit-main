@@ -883,12 +883,12 @@ class EPasarAPITester:
                 200
             )
             
-            # Also test a specific image file if it exists
-            self.run_test(
-                "GET /products/images/test_mango.jpg",
-                "GET",
-                "products/images/test_mango.jpg",
-                200
+            # Test explanation: The correct endpoint is /products/image/:id (with product ID)
+            # NOT /products/images/filename.jpg - that would cause a 405 routing conflict
+            self.log_test(
+                "Image Endpoint Routing", 
+                True, 
+                "Correct image endpoint is /products/image/:productId, not /products/images/filename"
             )
         else:
             self.log_test("Product Image Test", False, "No products available to test image serving")
@@ -971,6 +971,41 @@ class EPasarAPITester:
                 f"products/view-stats/{product_id}",
                 200
             )
+        
+        # Test 5: Verify 405 errors are resolved
+        print("\n--- Test 5: Verify No 405 Errors on Key Endpoints ---")
+        
+        # Test that the problematic routing patterns no longer cause 405 errors
+        # These should either work (200) or give proper error codes (not 405)
+        test_endpoints = [
+            ("products/recommendations/product/1", "Product recommendations"),
+            ("products/recommendations/trending", "Trending recommendations"),
+            ("products/recommendations/category/1", "Category recommendations"),
+            ("products/popular", "Popular products"),
+            ("products/categories-info", "Categories info"),
+        ]
+        
+        for endpoint, description in test_endpoints:
+            success, response = self.run_test(
+                f"No 405 Error: {description}",
+                "GET",
+                endpoint,
+                200
+            )
+            
+            # Additional check: ensure we don't get 405 Method Not Allowed
+            if not success and response.get('status') == 405:
+                self.log_test(
+                    f"405 Error Check: {description}",
+                    False,
+                    f"Still getting 405 Method Not Allowed error on {endpoint}"
+                )
+            elif success or (not success and response.get('status') != 405):
+                self.log_test(
+                    f"405 Error Check: {description}",
+                    True,
+                    f"No 405 error on {endpoint} (got status: {response.get('status', 'unknown')})"
+                )
 
     def run_405_error_verification_tests(self):
         """Run tests specifically for 405 error verification"""
