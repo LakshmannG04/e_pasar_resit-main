@@ -372,8 +372,8 @@ export default function CommunicationSystem() {
                             <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedConversation.Status)}`}>
                               {selectedConversation.Status}
                             </span>
-                            {/* Report button for buyers and sellers */}
-                            {(userRole === 'User' || userRole === 'Seller') && (
+                            {/* Report button for buyers and sellers - Only after mount to prevent hydration mismatch */}
+                            {mounted && (userRole === 'User' || userRole === 'Seller') && (
                               <button
                                 onClick={() => setShowReportDialog(true)}
                                 className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition duration-200 flex items-center space-x-1"
