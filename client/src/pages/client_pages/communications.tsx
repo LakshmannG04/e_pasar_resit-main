@@ -289,7 +289,6 @@ export default function CommunicationSystem() {
                       <h2 className="text-lg font-semibold text-gray-800">Your Conversations</h2>
                     </div>
                     {/* Role-specific action buttons - Only render after mount to prevent hydration mismatch */}
-                    {console.log('🔍 Role buttons check:', { mounted, userRole })}
                     {mounted && userRole === 'Seller' && (
                       <button
                         onClick={contactAdmin}
