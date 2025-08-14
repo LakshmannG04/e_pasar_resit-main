@@ -372,17 +372,6 @@ export default function CommunicationSystem() {
                             <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedConversation.Status)}`}>
                               {selectedConversation.Status}
                             </span>
-                            {/* Report button for buyers and sellers - Only after mount to prevent hydration mismatch */}
-                            {mounted && (userRole === 'User' || userRole === 'Seller') && (
-                              <button
-                                onClick={() => setShowReportDialog(true)}
-                                className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition duration-200 flex items-center space-x-1"
-                                title="Report this conversation"
-                              >
-                                <span>🚨</span>
-                                <span>Report</span>
-                              </button>
-                            )}
                           </div>
                         </div>
                       </div>
@@ -450,6 +439,17 @@ export default function CommunicationSystem() {
                             className="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-200"
                             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                           />
+                          {/* Report button next to send button - for buyers and sellers */}
+                          {mounted && (userRole === 'User' || userRole === 'Seller') && (
+                            <button
+                              onClick={() => setShowReportDialog(true)}
+                              className="px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg transition duration-200 flex items-center space-x-1"
+                              title="Report this conversation"
+                            >
+                              <span>🚨</span>
+                              <span>Report</span>
+                            </button>
+                          )}
                           <button
                             onClick={sendMessage}
                             disabled={!newMessage.trim()}
