@@ -59,6 +59,10 @@ export default function CommunicationSystem() {
   const [reportAttachments, setReportAttachments] = useState<File[]>([]);
 
   useEffect(() => {
+    // Get user role
+    const role = getRole();
+    setUserRole(role || '');
+    
     fetchConversations();
     fetchUnreadCount();
     
