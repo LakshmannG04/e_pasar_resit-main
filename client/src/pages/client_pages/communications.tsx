@@ -274,13 +274,34 @@ export default function CommunicationSystem() {
                     <div className="flex justify-between items-center mb-4">
                       <h2 className="text-lg font-semibold text-gray-800">Your Conversations</h2>
                     </div>
-                    <button
-                      onClick={() => setShowCreateDialog(true)}
-                      className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-green-700 hover:to-blue-700 transition duration-200 flex items-center justify-center space-x-2"
-                    >
-                      <span>➕</span>
-                      <span>Start New Conversation</span>
-                    </button>
+                    {/* Role-specific action buttons */}
+                    {userRole === 'Seller' && (
+                      <button
+                        onClick={contactAdmin}
+                        disabled={loading}
+                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-blue-700 hover:to-purple-700 transition duration-200 flex items-center justify-center space-x-2"
+                      >
+                        <span>👨‍💼</span>
+                        <span>{loading ? 'Connecting...' : 'Contact Admin'}</span>
+                      </button>
+                    )}
+                    
+                    {(userRole === 'Admin' || userRole === 'SuperAdmin') && (
+                      <button
+                        onClick={() => setShowCreateDialog(true)}
+                        className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-green-700 hover:to-blue-700 transition duration-200 flex items-center justify-center space-x-2"
+                      >
+                        <span>➕</span>
+                        <span>Start New Conversation</span>
+                      </button>
+                    )}
+                    
+                    {userRole === 'User' && conversations.length === 0 && (
+                      <div className="text-center text-gray-500 p-4">
+                        <p className="text-sm">No conversations yet.</p>
+                        <p className="text-xs mt-1">Contact sellers from product pages to start conversations.</p>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex-1 overflow-y-auto">
