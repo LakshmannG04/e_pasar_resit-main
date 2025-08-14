@@ -441,6 +441,7 @@ export default function CommunicationSystem() {
                             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                           />
                           {/* Report button next to send button - for buyers and sellers */}
+                          {console.log('🔍 Report button check:', { mounted, userRole, shouldShow: mounted && (userRole === 'User' || userRole === 'Seller') })}
                           {mounted && (userRole === 'User' || userRole === 'Seller') && (
                             <button
                               onClick={() => setShowReportDialog(true)}
