@@ -1154,14 +1154,15 @@ class EPasarAPITester:
         )
         
         if success and 'data' in recommendations_response:
-            recommendations = recommendations_response['data']
+            recommendations_data = recommendations_response['data']
             
-            # Verify response format (should be array)
-            if isinstance(recommendations, list):
+            # The API returns an object with 'recommendations' array, not a direct array
+            if 'recommendations' in recommendations_data and isinstance(recommendations_data['recommendations'], list):
+                recommendations = recommendations_data['recommendations']
                 self.log_test(
                     "Recommendations API Response Format", 
                     True, 
-                    f"Response is array format with {len(recommendations)} recommendations"
+                    f"Response has proper structure with recommendations array containing {len(recommendations)} items"
                 )
                 
                 # Check if recommendations exist
@@ -1199,7 +1200,7 @@ class EPasarAPITester:
                 self.log_test(
                     "Recommendations API Response Format", 
                     False, 
-                    f"Expected array format, got: {type(recommendations)}"
+                    f"Expected object with 'recommendations' array, got: {type(recommendations_data)}"
                 )
         
         # Test 4: Verify Product Images
