@@ -27,7 +27,6 @@ interface Conversation {
   Title: string;
   Description: string;
   Status: string;
-  Priority: string;
   CreatedAt: string;
   Complainant: any;
   Respondent: any;
