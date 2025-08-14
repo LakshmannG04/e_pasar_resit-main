@@ -300,9 +300,6 @@ export default function CommunicationSystem() {
                             <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedConversation.Status)}`}>
                               {selectedConversation.Status}
                             </span>
-                            <span className={`px-3 py-1 rounded-full text-sm ${getPriorityColor(selectedConversation.Priority)}`}>
-                              {selectedConversation.Priority}
-                            </span>
                           </div>
                         </div>
                       </div>
