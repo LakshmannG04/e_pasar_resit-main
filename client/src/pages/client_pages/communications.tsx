@@ -60,7 +60,8 @@ export default function CommunicationSystem() {
   const [reportAttachments, setReportAttachments] = useState<File[]>([]);
 
   useEffect(() => {
-    // Get user role
+    // Fix hydration mismatch - only get role after mount
+    setMounted(true);
     const role = getRole();
     setUserRole(role || '');
     
