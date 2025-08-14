@@ -707,9 +707,9 @@ router.get('/recommendations/user', checkAuth(['User', 'Seller', 'Admin', 'Super
       const categoryRecommendations = await PRODUCTS.findAll({
         where: {
           ProdStatus: 'Active',
-          CategoryID: { [sequelize.Op.in]: viewedCategories },
+          CategoryID: { [Op.in]: viewedCategories },
           ProductID: {
-            [sequelize.Op.notIn]: [
+            [Op.notIn]: [
               ...viewedProductIds,
               ...recommendations.map(r => r.ProductID)
             ]
