@@ -381,14 +381,14 @@ router.post('/conversation/:disputeId/send-message', checkAuth(['User', 'Seller'
             });
         }
 
-        // Check if user has access to this conversation
+        // Check if user has access to this conversation - Updated for admin support
         const dispute = await DISPUTE.findOne({
             where: {
                 DisputeID: disputeId,
                 [Op.or]: [
-                    { LodgedBy: user.id },
-                    { LodgedAgainst: user.id },
-                    { HandledBy: user.id }
+                    { LodgedBy: user.id },           // User started the conversation
+                    { LodgedAgainst: user.id },      // Conversation directed to user (including admins)
+                    { HandledBy: user.id }           // User is handling the conversation
                 ]
             }
         });
