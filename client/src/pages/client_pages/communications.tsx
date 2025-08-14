@@ -273,9 +273,6 @@ export default function CommunicationSystem() {
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(conversation.Status)}`}>
                                 {conversation.Status}
                               </span>
-                              <span className={`px-2 py-1 rounded-full text-xs ${getPriorityColor(conversation.Priority)}`}>
-                                {conversation.Priority}
-                              </span>
                             </div>
                           </div>
                           <p className="text-xs text-gray-600 truncate mb-2">{conversation.Description}</p>
