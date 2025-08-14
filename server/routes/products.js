@@ -437,6 +437,36 @@ router.patch('/toggleStatus', checkAuth(['Seller', 'SuperAdmin', 'Admin']), asyn
 //********************************************************************************************************************
 // NEW API ENDPOINTS FOR CLIENT REQUIREMENTS
 
+// Enhanced route to verify product before creation (dry-run)
+router.post('/verify-product', checkAuth(['Seller']), async (req, res) => {
+  try {
+    const { productName, description } = req.body;
+
+    if (!productName || !description) {
+      return res.status(400).json({
+        status: 400,
+        message: 'Product name and description are required for verification'
+      });
+    }
+
+    const verificationResult = await verifyProductSuitability(productName, description);
+
+    res.status(200).json({
+      status: 200,
+      message: verificationResult.approved 
+        ? 'Product verification passed - ready for listing'
+        : 'Product verification failed - cannot be listed',
+      data: verificationResult
+    });
+  } catch (error) {
+    console.error('Error in product verification:', error);
+    res.status(500).json({
+      status: 500,
+      message: 'Error verifying product'
+    });
+  }
+});
+
 // Route to suggest category based on product description
 router.post('/suggest-category', checkAuth(['Seller']), async (req, res) => {
   try {
