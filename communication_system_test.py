@@ -102,7 +102,7 @@ class EPasarCommunicationTester:
         
         if success and 'data' in response and 'token' in response['data']:
             self.token = response['data']['token']
-            self.user_id = response['data'].get('userID')
+            self.user_id = response['data'].get('userID') or response['data'].get('UserID')
             self.user_auth = response['data'].get('userAuth')
             print(f"✅ Login successful - UserAuth: {self.user_auth}, UserID: {self.user_id}")
             return True, self.user_auth
