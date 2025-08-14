@@ -271,12 +271,12 @@ export default function ProductPage({product, productImage}:any) {
                           </div>
                           {token && (
                             <div>
-                              <a
-                                href={`/client_pages/communications?contact=${product.Seller.Username}&subject=Inquiry about ${product.ProductName}`}
+                              <button
+                                onClick={() => handleContactSeller(product.Seller.UserID, product.ProductID)}
                                 className="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition duration-200"
                               >
                                 💬 Contact Seller
-                              </a>
+                              </button>
                             </div>
                           )}
                         </div>
