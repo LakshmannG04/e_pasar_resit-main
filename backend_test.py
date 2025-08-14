@@ -2132,12 +2132,15 @@ def main():
             elif test_type == "conversation":
                 print("💬 Creating Test Conversation for Report Button Testing...")
                 success = tester.run_conversation_creation_tests()
+            elif test_type == "admin":
+                print("👨‍💼 Running Admin Chat Functionality Tests...")
+                success = tester.run_admin_chat_tests()
             else:
-                print("❌ Unknown test type. Available options: verification, ai, 405, hydration, report, conversation")
+                print("❌ Unknown test type. Available options: verification, ai, 405, hydration, report, conversation, admin")
                 success = False
         else:
-            print("💬 Creating Test Conversation for Report Button Testing...")
-            success = tester.run_conversation_creation_tests()
+            print("👨‍💼 Running Admin Chat Functionality Tests...")
+            success = tester.run_admin_chat_tests()
         
         return 0 if success else 1
     except KeyboardInterrupt:
