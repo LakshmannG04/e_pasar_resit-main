@@ -1589,6 +1589,282 @@ class EPasarAPITester:
         
         return len(failed_tests) == 0
 
+    def test_admin_chat_functionality(self):
+        """Test the fixed admin chat functionality where admins can reply to sellers"""
+        print("\n💬 Testing Admin Chat Functionality...")
+        
+        # Test Scenario 1: Create Seller-Admin Conversation
+        print("\n--- Test Scenario 1: Create Seller-Admin Conversation ---")
+        
+        # Login as seller_test
+        seller_login_success, seller_auth = self.test_login("seller_test", "seller123")
+        if not seller_login_success:
+            self.log_test("Seller Login for Admin Chat Test", False, "Failed to login as seller_test")
+            return False
+        
+        # Create conversation with admin using contact-admin endpoint
+        contact_admin_data = {
+            "subject": "Product Listing Issue",
+            "message": "Hi admin, I'm having trouble with my product listings. Can you help me?"
+        }
+        
+        success, contact_response = self.run_test(
+            "Seller Contact Admin",
+            "POST",
+            "communication/contact-admin",
+            200,
+            data=contact_admin_data
+        )
+        
+        seller_admin_conversation_id = None
+        assigned_admin_username = None
+        
+        if success and 'data' in contact_response:
+            seller_admin_conversation_id = contact_response['data']['conversationId']
+            assigned_admin_username = contact_response['data']['assignedAdmin']['username']
+            self.log_test(
+                "Seller-Admin Conversation Created", 
+                True, 
+                f"Conversation ID: {seller_admin_conversation_id}, Assigned Admin: {assigned_admin_username}"
+            )
+        else:
+            self.log_test("Seller-Admin Conversation Creation", False, "Failed to create conversation with admin")
+            return False
+        
+        # Test Scenario 2: Test Admin Can See Conversation
+        print("\n--- Test Scenario 2: Test Admin Can See Conversation ---")
+        
+        # Try to login as the assigned admin or fallback to known admin accounts
+        admin_accounts = [
+            ("SuperAdmin", "admin123"),
+            ("admin_test", "admin123"),
+            ("admin1", "admin123")
+        ]
+        
+        admin_login_success = False
+        admin_username = None
+        
+        for username, password in admin_accounts:
+            admin_login_success, admin_auth = self.test_login(username, password)
+            if admin_login_success and admin_auth in ['Admin', 'SuperAdmin']:
+                admin_username = username
+                self.log_test(
+                    f"Admin Login ({username})", 
+                    True, 
+                    f"Successfully logged in as {admin_auth}"
+                )
+                break
+        
+        if not admin_login_success:
+            self.log_test("Admin Login", False, "Failed to login as any admin account")
+            return False
+        
+        # Get admin conversations to verify admin can see the seller conversation
+        success, admin_conversations = self.run_test(
+            "Get Admin Conversations",
+            "GET",
+            "communication/my-conversations",
+            200
+        )
+        
+        admin_can_see_conversation = False
+        if success and 'data' in admin_conversations:
+            conversations = admin_conversations['data']
+            # Check if the seller-admin conversation is visible to admin
+            for conv in conversations:
+                if conv['DisputeID'] == seller_admin_conversation_id:
+                    admin_can_see_conversation = True
+                    self.log_test(
+                        "Admin Can See Seller Conversation", 
+                        True, 
+                        f"Admin can see conversation {seller_admin_conversation_id} in their conversation list"
+                    )
+                    break
+            
+            if not admin_can_see_conversation:
+                self.log_test(
+                    "Admin Can See Seller Conversation", 
+                    False, 
+                    f"Admin cannot see conversation {seller_admin_conversation_id} (found {len(conversations)} conversations)"
+                )
+        
+        # Test Scenario 3: Test Admin Can Send Messages
+        print("\n--- Test Scenario 3: Test Admin Can Send Messages ---")
+        
+        if seller_admin_conversation_id:
+            # Admin sends reply message to seller
+            admin_reply_data = {
+                "message": "Hello! I received your inquiry about product listings. I'm here to help you resolve this issue.",
+                "messageType": "message"
+            }
+            
+            success, admin_reply_response = self.run_test(
+                "Admin Send Reply Message",
+                "POST",
+                f"communication/conversation/{seller_admin_conversation_id}/send-message",
+                200,
+                data=admin_reply_data
+            )
+            
+            if success:
+                self.log_test(
+                    "Admin Can Send Messages", 
+                    True, 
+                    "Admin successfully sent reply message to seller"
+                )
+            else:
+                self.log_test(
+                    "Admin Can Send Messages", 
+                    False, 
+                    "Admin failed to send reply message - Access denied error likely"
+                )
+        
+        # Test Scenario 4: Test Full Chat Functionality
+        print("\n--- Test Scenario 4: Test Full Chat Functionality ---")
+        
+        if seller_admin_conversation_id:
+            # Get conversation messages to verify message history
+            success, messages_response = self.run_test(
+                "Get Conversation Messages (Admin View)",
+                "GET",
+                f"communication/conversation/{seller_admin_conversation_id}/messages",
+                200
+            )
+            
+            if success and 'data' in messages_response:
+                messages = messages_response['data']['messages']
+                self.log_test(
+                    "Admin Can Access Message History", 
+                    True, 
+                    f"Admin can view {len(messages)} messages in conversation"
+                )
+                
+                # Verify admin's message appears in history
+                admin_message_found = False
+                for msg in messages:
+                    if msg['Message'] and 'help you resolve this issue' in msg['Message']:
+                        admin_message_found = True
+                        break
+                
+                if admin_message_found:
+                    self.log_test(
+                        "Admin Message in History", 
+                        True, 
+                        "Admin's reply message appears in conversation history"
+                    )
+                else:
+                    self.log_test(
+                        "Admin Message in History", 
+                        False, 
+                        "Admin's reply message not found in conversation history"
+                    )
+            else:
+                self.log_test(
+                    "Admin Can Access Message History", 
+                    False, 
+                    "Admin cannot access conversation message history"
+                )
+        
+        # Test Scenario 5: Test Both Directions (Seller Reply to Admin)
+        print("\n--- Test Scenario 5: Test Both Directions ---")
+        
+        # Login back as seller to test seller can reply to admin
+        seller_login_success, seller_auth = self.test_login("seller_test", "seller123")
+        
+        if seller_login_success and seller_admin_conversation_id:
+            # Seller sends follow-up message
+            seller_followup_data = {
+                "message": "Thank you for your quick response! The specific issue I'm facing is that my product images are not displaying correctly.",
+                "messageType": "message"
+            }
+            
+            success, seller_followup_response = self.run_test(
+                "Seller Follow-up Message",
+                "POST",
+                f"communication/conversation/{seller_admin_conversation_id}/send-message",
+                200,
+                data=seller_followup_data
+            )
+            
+            if success:
+                self.log_test(
+                    "Seller Can Reply to Admin", 
+                    True, 
+                    "Seller successfully sent follow-up message to admin"
+                )
+            
+            # Login back as admin and send another reply
+            admin_login_success, admin_auth = self.test_login(admin_username, "admin123")
+            
+            if admin_login_success:
+                admin_followup_data = {
+                    "message": "I understand the image display issue. Let me check your product settings and get back to you with a solution.",
+                    "messageType": "message"
+                }
+                
+                success, admin_followup_response = self.run_test(
+                    "Admin Follow-up Reply",
+                    "POST",
+                    f"communication/conversation/{seller_admin_conversation_id}/send-message",
+                    200,
+                    data=admin_followup_data
+                )
+                
+                if success:
+                    self.log_test(
+                        "Admin Can Send Multiple Messages", 
+                        True, 
+                        "Admin successfully sent follow-up reply message"
+                    )
+        
+        # Final verification: Get final message count
+        if seller_admin_conversation_id:
+            # Login as admin for final check
+            admin_login_success, admin_auth = self.test_login(admin_username, "admin123")
+            
+            if admin_login_success:
+                success, final_messages_response = self.run_test(
+                    "Final Message Count Verification",
+                    "GET",
+                    f"communication/conversation/{seller_admin_conversation_id}/messages",
+                    200
+                )
+                
+                if success and 'data' in final_messages_response:
+                    final_messages = final_messages_response['data']['messages']
+                    self.log_test(
+                        "Full Chat Functionality Verified", 
+                        True, 
+                        f"Complete conversation contains {len(final_messages)} messages with back-and-forth communication"
+                    )
+        
+        return True
+
+    def run_admin_chat_tests(self):
+        """Run tests specifically for admin chat functionality"""
+        print("🚀 Starting Admin Chat Functionality Tests")
+        print(f"📡 Testing against: {self.base_url}")
+        print("=" * 80)
+        
+        # Test the admin chat functionality as requested
+        self.test_admin_chat_functionality()
+        
+        # Print final results
+        print("\n" + "=" * 80)
+        print(f"📊 Admin Chat Test Results: {self.tests_passed}/{self.tests_run} tests passed")
+        print(f"✅ Success Rate: {(self.tests_passed/self.tests_run)*100:.1f}%")
+        
+        # Print failed tests
+        failed_tests = [r for r in self.test_results if not r['success']]
+        if failed_tests:
+            print("\n❌ Failed Tests:")
+            for test in failed_tests:
+                print(f"   - {test['test']}: {test['message']}")
+        else:
+            print("\n🎉 All admin chat functionality tests passed!")
+        
+        return len(failed_tests) == 0
+
     def test_create_conversation_for_report_testing(self):
         """Create test conversation to verify report button functionality"""
         print("\n📋 Creating Test Conversation for Report Button Testing...")
