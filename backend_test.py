@@ -289,8 +289,10 @@ class EPasarAPITester:
         
         # Test 5: Create product with valid agricultural item
         print("\n--- Test 5: Product Creation with Valid Agricultural Item ---")
+        # Use timestamp to ensure unique product name
+        timestamp = int(datetime.now().timestamp())
         valid_product_data = {
-            "productName": "Fresh Organic Tomatoes",
+            "productName": f"Fresh Organic Tomatoes {timestamp}",
             "description": "Locally grown organic tomatoes, perfect for cooking and salads. Rich in vitamins and minerals.",
             "price": 5.99,
             "category": 2,  # Vegetables category
