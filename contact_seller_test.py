@@ -104,8 +104,27 @@ class ContactSellerFlowTester:
         
         if success and 'data' in response and 'token' in response['data']:
             token = response['data']['token']
-            user_id = response['data'].get('userID')
             user_auth = response['data'].get('userAuth')
+            
+            # Decode JWT to get user ID (JWT format: header.payload.signature)
+            try:
+                import base64
+                import json as json_lib
+                
+                # Split token and decode payload
+                token_parts = token.split('.')
+                if len(token_parts) >= 2:
+                    # Add padding if needed
+                    payload = token_parts[1]
+                    payload += '=' * (4 - len(payload) % 4)
+                    decoded_payload = base64.b64decode(payload)
+                    payload_data = json_lib.loads(decoded_payload)
+                    user_id = payload_data.get('id')
+                else:
+                    user_id = None
+            except Exception as e:
+                print(f"Warning: Could not decode JWT token: {e}")
+                user_id = None
             
             if user_type == "buyer":
                 self.buyer_token = token
