@@ -1056,7 +1056,7 @@ class EPasarAPITester:
                 
                 # Verify product data structure
                 first_product = products[0]
-                required_fields = ['ProductID', 'ProductName', 'Price', 'Description', 'Category']
+                required_fields = ['ProductID', 'ProductName', 'Price', 'Description', 'CategoryID']
                 missing_fields = [field for field in required_fields if field not in first_product]
                 
                 if not missing_fields:
