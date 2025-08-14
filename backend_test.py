@@ -854,12 +854,12 @@ class EPasarAPITester:
         return self.tests_passed == self.tests_run
 
 def main():
-    """Main test execution"""
+    """Main test execution for enhanced verification system"""
     # Try localhost first, then check if there are other endpoints
     tester = EPasarAPITester("http://localhost:8001")
     
     try:
-        success = tester.run_all_tests()
+        success = tester.run_all_verification_tests()
         return 0 if success else 1
     except KeyboardInterrupt:
         print("\n⚠️ Tests interrupted by user")
