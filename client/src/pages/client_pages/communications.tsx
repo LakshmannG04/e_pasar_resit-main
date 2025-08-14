@@ -63,6 +63,7 @@ export default function CommunicationSystem() {
     // Fix hydration mismatch - only get role after mount
     setMounted(true);
     const role = getRole();
+    console.log('🔍 User role detected:', role); // Debug log
     setUserRole(role || '');
     
     fetchConversations();
