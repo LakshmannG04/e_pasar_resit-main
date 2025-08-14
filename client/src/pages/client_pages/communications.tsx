@@ -205,24 +205,35 @@ export default function CommunicationSystem() {
     }
   };
 
+  // Contact Admin function for sellers
   const contactAdmin = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const response = await axios.post(Endpoint.createDispute, {
-        title: 'Contact Admin',
-        description: 'I need assistance from an administrator.',
-        targetUsername: 'admin' // This should be the admin username
+      const response = await axios.post(Endpoint.contactAdmin, {
+        subject: 'General Inquiry',
+        message: 'Opening conversation with admin support.'
       }, {
         headers: { Authorization: `Bearer ${getToken("token")}` }
       });
 
       if (response.status === 200) {
-        alert('✅ Admin contact request sent successfully!');
-        fetchConversations();
+        const conversationId = response.data.data.conversationId;
+        await fetchConversations();
+        
+        // Redirect to the new conversation
+        setTimeout(() => {
+          const newConversations = conversations.filter(conv => conv.DisputeID === conversationId);
+          if (newConversations.length > 0) {
+            setSelectedConversation(newConversations[0]);
+            fetchMessages(conversationId);
+          }
+        }, 1000);
+        
+        alert('Connected with admin support! You can now type your message.');
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error contacting admin:', error);
-      alert(error.response?.data?.message || 'Failed to contact admin');
+      alert('Error contacting admin. Please try again.');
     } finally {
       setLoading(false);
     }
