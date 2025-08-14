@@ -227,10 +227,29 @@ router.post('/', checkAuth(['Seller']), upload.single('image'), validateProduct,
       }
     }
 
+    // Enhanced response with verification info
+    const responseData = {
+      ...productEntry.get(), 
+      imageProcessed,
+      verification: {
+        approved: req.verificationResult.approved,
+        confidence: req.verificationResult.confidence,
+        reason: req.verificationResult.reason,
+        matchedKeywords: req.verificationResult.matchedKeywords
+      }
+    };
+
+    // Add category warning if present
+    if (req.categoryWarning) {
+      responseData.categoryWarning = req.categoryWarning;
+    }
+
     res.status(200).json({
       status: 200,
-      message: 'Product created successfully',
-      data: { ...productEntry.get(), imageProcessed }
+      message: req.categoryWarning 
+        ? `Product created successfully. ${req.categoryWarning.message}`
+        : 'Product created successfully and verified as agricultural item',
+      data: responseData
     });
   } catch (err) {
     if (err.name === 'SequelizeValidationError') {
