@@ -101,23 +101,33 @@ export default function ProductPage({product, productImage}:any) {
         const response = await axios.get(`${Endpoint.products}/recommendations/product/${product.ProductID}`);
         if (response.status === 200) {
           const recProducts = response.data.data;
-          setRecommendations(recProducts);
           
-          // Fetch images for recommendations
-          const images = [];
-          for (let recProduct of recProducts) {
-            try {
-              // Create image URL directly instead of fetching image data
-              const imageUrl = `${Endpoint.products}/images/${recProduct.ProductImage}`;
-              images.push({ProductID: recProduct.ProductID, ProductImage: imageUrl});
-            } catch (error) {
-              console.log("Error creating recommendation image URL:", error);
+          // Ensure recProducts is an array before iterating
+          if (Array.isArray(recProducts)) {
+            setRecommendations(recProducts);
+            
+            // Fetch images for recommendations
+            const images = [];
+            for (let recProduct of recProducts) {
+              try {
+                // Create image URL directly instead of fetching image data
+                const imageUrl = `${Endpoint.products}/images/${recProduct.ProductImage}`;
+                images.push({ProductID: recProduct.ProductID, ProductImage: imageUrl});
+              } catch (error) {
+                console.log("Error creating recommendation image URL:", error);
+              }
             }
+            setRecommendationImages(images);
+          } else {
+            console.log("Recommendations response is not an array:", recProducts);
+            setRecommendations([]);
+            setRecommendationImages([]);
           }
-          setRecommendationImages(images);
         }
       } catch (error) {
         console.log("Error fetching recommendations:", error);
+        setRecommendations([]);
+        setRecommendationImages([]);
       }
     };
 
