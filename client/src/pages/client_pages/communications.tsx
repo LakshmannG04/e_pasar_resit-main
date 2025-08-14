@@ -599,6 +599,110 @@ export default function CommunicationSystem() {
             </div>
           </div>
         )}
+
+        {/* Report Conversation Dialog */}
+        {showReportDialog && selectedConversation && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4">
+              <div className="p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                  🚨 <span className="ml-2">Report Conversation</span>
+                </h3>
+                
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Reporting:</strong> {selectedConversation.Title}
+                  </p>
+                  <p className="text-xs text-yellow-600 mt-1">
+                    This report will be reviewed by our admin team.
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Report Title (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={reportTitle}
+                      onChange={(e) => setReportTitle(e.target.value)}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition duration-200"
+                      placeholder="Brief title for your report"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Description *
+                    </label>
+                    <textarea
+                      value={reportDescription}
+                      onChange={(e) => setReportDescription(e.target.value)}
+                      rows={4}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition duration-200"
+                      placeholder="Describe the issue with this conversation..."
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Attachments (Optional)
+                    </label>
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*,.pdf,.doc,.docx,.txt"
+                      onChange={(e) => {
+                        if (e.target.files) {
+                          setReportAttachments(Array.from(e.target.files));
+                        }
+                      }}
+                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-red-500 transition duration-200"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Max 5 files, 10MB each. Supported: Images, PDF, Documents
+                    </p>
+                    {reportAttachments.length > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm text-green-600">
+                          {reportAttachments.length} file(s) selected:
+                        </p>
+                        <ul className="text-xs text-gray-600">
+                          {reportAttachments.map((file, index) => (
+                            <li key={index}>• {file.name}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex justify-end space-x-3 mt-8">
+                  <button
+                    onClick={() => {
+                      setShowReportDialog(false);
+                      setReportTitle('');
+                      setReportDescription('');
+                      setReportAttachments([]);
+                    }}
+                    className="px-6 py-3 text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-200"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={reportConversation}
+                    disabled={!reportDescription.trim() || loading}
+                    className="px-6 py-3 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-700 disabled:bg-red-300 disabled:cursor-not-allowed transition duration-200"
+                  >
+                    {loading ? 'Submitting...' : 'Submit Report'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </User_Layout>
   );
