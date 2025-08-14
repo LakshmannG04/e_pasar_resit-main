@@ -102,7 +102,7 @@ class CommunicationSystemTester:
         
         if success and 'data' in response and 'token' in response['data']:
             self.tokens[user_type] = response['data']['token']
-            self.user_ids[user_type] = response['data'].get('userID')
+            self.user_ids[user_type] = response['data'].get('id')  # Use 'id' instead of 'userID'
             user_auth = response['data'].get('userAuth')
             print(f"✅ {user_type} login successful - UserAuth: {user_auth}, UserID: {self.user_ids[user_type]}")
             return True, user_auth
