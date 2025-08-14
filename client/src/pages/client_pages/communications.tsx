@@ -201,22 +201,13 @@ export default function CommunicationSystem() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      'Open': 'bg-blue-100 text-blue-800',
-      'In Progress': 'bg-yellow-100 text-yellow-800',
-      'Resolved': 'bg-green-100 text-green-800',
-      'Closed': 'bg-gray-100 text-gray-800'
+      'Open': 'bg-green-100 text-green-800',
+      'In Progress': 'bg-blue-100 text-blue-800',
+      'Waiting Response': 'bg-yellow-100 text-yellow-800',
+      'Resolved': 'bg-gray-100 text-gray-800',
+      'Closed': 'bg-red-100 text-red-800'
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
-  };
-
-  const getPriorityColor = (priority: string) => {
-    const colors: Record<string, string> = {
-      'Low': 'bg-gray-100 text-gray-600',
-      'Medium': 'bg-blue-100 text-blue-600',
-      'High': 'bg-orange-100 text-orange-600',
-      'Urgent': 'bg-red-100 text-red-600'
-    };
-    return colors[priority] || 'bg-gray-100 text-gray-600';
   };
 
   return (
