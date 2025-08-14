@@ -107,9 +107,9 @@ class ConversationDeletionTester:
         print("=" * 60)
         
         try:
-            # Change to server directory and run the deletion script
+            # Change to server directory and run the FIXED deletion script
             server_dir = "/app/server"
-            script_path = os.path.join(server_dir, "delete_user_conversations.js")
+            script_path = os.path.join(server_dir, "delete_user_conversations_fixed.js")
             
             if not os.path.exists(script_path):
                 self.log_test("Deletion Script Exists", False, f"Script not found at {script_path}")
