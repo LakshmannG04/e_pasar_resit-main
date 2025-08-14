@@ -287,8 +287,8 @@ export default function CommunicationSystem() {
                     <div className="flex justify-between items-center mb-4">
                       <h2 className="text-lg font-semibold text-gray-800">Your Conversations</h2>
                     </div>
-                    {/* Role-specific action buttons */}
-                    {userRole === 'Seller' && (
+                    {/* Role-specific action buttons - Only render after mount to prevent hydration mismatch */}
+                    {mounted && userRole === 'Seller' && (
                       <button
                         onClick={contactAdmin}
                         disabled={loading}
@@ -299,7 +299,7 @@ export default function CommunicationSystem() {
                       </button>
                     )}
                     
-                    {(userRole === 'Admin' || userRole === 'SuperAdmin') && (
+                    {mounted && (userRole === 'Admin' || userRole === 'SuperAdmin') && (
                       <button
                         onClick={() => setShowCreateDialog(true)}
                         className="w-full bg-gradient-to-r from-green-600 to-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:from-green-700 hover:to-blue-700 transition duration-200 flex items-center justify-center space-x-2"
@@ -309,11 +309,15 @@ export default function CommunicationSystem() {
                       </button>
                     )}
                     
-                    {userRole === 'User' && conversations.length === 0 && (
+                    {mounted && userRole === 'User' && conversations.length === 0 && (
                       <div className="text-center text-gray-500 p-4">
                         <p className="text-sm">No conversations yet.</p>
                         <p className="text-xs mt-1">Contact sellers from product pages to start conversations.</p>
                       </div>
+                    )}
+                    
+                    {!mounted && (
+                      <div className="w-full h-10 bg-gray-200 animate-pulse rounded-lg"></div>
                     )}
                   </div>
 
