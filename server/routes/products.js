@@ -12,6 +12,7 @@ const { suggestCategory, getAvailableCategories } = require('../functions/catego
 const { generateProductImage, getImageOptions } = require('../functions/imageService');
 
 const { sequelize, CATEGORY, PRODUCTS, CART, PRODUCT_VIEWS, DISPUTE_MSG, USERS } = require('../models');
+const { Op } = require('sequelize');
 
 const imageFolderPath = path.join(__dirname, '..', 'images/products');
 
