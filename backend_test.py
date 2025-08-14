@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """
-E-Pasar Agricultural Marketplace - Backend API Testing
-Tests all the new features mentioned in the review request:
-1. AI Category Verification
-2. AI Image Generation 
-3. Enhanced Communication System
-4. Product View Counter
+E-Pasar Agricultural Marketplace - Enhanced Product Verification Testing
+Tests the enhanced agricultural product verification system:
+1. Forbidden Product Detection (Chair - should be REJECTED)
+2. Low Agricultural Match Detection (Random Item - should be REJECTED)  
+3. Valid Agricultural Product Approval (Fresh Organic Apples - should be APPROVED)
+4. Product Creation with Forbidden Item (should be blocked)
+5. Product Creation with Valid Agricultural Item (should succeed)
+6. Enhanced suggest-category endpoint with approval status
 """
 
 import requests
