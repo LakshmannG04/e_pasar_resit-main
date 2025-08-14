@@ -279,19 +279,60 @@ const suggestCategory = async (productName, description) => {
 };
 
 /**
- * Get all available categories
- * @returns {Array} - List of categories with their keywords
+ * Get all available categories with enhanced information
+ * @returns {Array} - List of categories with their keywords and thresholds
  */
 const getAvailableCategories = () => {
     return Object.entries(categoryKeywords).map(([id, info]) => ({
         id: parseInt(id),
         name: info.name,
-        sampleKeywords: info.keywords.slice(0, 5) // Show first 5 keywords as examples
+        sampleKeywords: info.keywords.slice(0, 8), // Show first 8 keywords as examples
+        totalKeywords: info.keywords.length,
+        confidenceThresholds: {
+            minimum: MINIMUM_CONFIDENCE_THRESHOLD,
+            recommended: RECOMMENDED_CONFIDENCE_THRESHOLD
+        }
     }));
+};
+
+/**
+ * Get detailed verification information for UI display
+ * @returns {Object} - Verification system information
+ */
+const getVerificationInfo = () => {
+    return {
+        systemType: 'Enhanced Agricultural Product Verification',
+        minimumConfidence: MINIMUM_CONFIDENCE_THRESHOLD,
+        recommendedConfidence: RECOMMENDED_CONFIDENCE_THRESHOLD,
+        categories: getAvailableCategories(),
+        forbiddenItemsCount: forbiddenKeywords.length,
+        sampleForbiddenItems: [
+            'furniture (chairs, tables, sofas)',
+            'electronics (phones, computers, TVs)', 
+            'clothing (shirts, pants, shoes)',
+            'vehicles (cars, bikes, boats)',
+            'tools (hammers, drills, saws)',
+            'toys and games',
+            'beauty products',
+            'office supplies'
+        ],
+        guidelines: [
+            'Products must be agricultural items: fruits, vegetables, seeds, or spices',
+            'Use specific agricultural terms in product names and descriptions',
+            'Include descriptive words like "fresh", "organic", "grown", "harvest"',
+            'Avoid generic terms - be specific about your agricultural product',
+            'Minimum confidence threshold: ' + MINIMUM_CONFIDENCE_THRESHOLD + '%'
+        ]
+    };
 };
 
 module.exports = {
     suggestCategory,
+    verifyProductSuitability,
     getAvailableCategories,
-    categoryKeywords
+    getVerificationInfo,
+    categoryKeywords,
+    forbiddenKeywords,
+    MINIMUM_CONFIDENCE_THRESHOLD,
+    RECOMMENDED_CONFIDENCE_THRESHOLD
 };
