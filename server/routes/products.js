@@ -578,7 +578,7 @@ router.get('/view-stats/:id', async (req, res) => {
       where: {
         ProductID: productId,
         ViewedAt: {
-          [sequelize.Op.gte]: sevenDaysAgo
+          [Op.gte]: sevenDaysAgo
         }
       }
     });
