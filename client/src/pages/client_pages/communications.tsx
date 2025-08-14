@@ -173,8 +173,7 @@ export default function CommunicationSystem() {
       const response = await axios.post(Endpoint.createDispute, {
         title: newConversationTitle,
         description: newConversationDescription,
-        targetUsername: selectedUser.Username,
-        priority: priority
+        targetUsername: selectedUser.Username
       }, {
         headers: { Authorization: `Bearer ${getToken("token")}` }
       });
