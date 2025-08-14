@@ -1,9 +1,96 @@
-// Enhanced Communication/Messaging System
+// Enhanced Communication/Messaging System with Reporting and Admin Assignment
 const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const fs = require('fs');
 const router = express.Router();
 const { checkAuth } = require('../functions/checkAuth');
-const { DISPUTE, DISPUTE_MSG, USERS } = require('../models');
+const { DISPUTE, DISPUTE_MSG, USERS, REPORT } = require('../models');
 const { Op } = require('sequelize');
+
+// Setup multer for report attachments
+const reportAttachmentsPath = path.join(__dirname, '..', 'uploads', 'reports');
+if (!fs.existsSync(reportAttachmentsPath)) {
+    fs.mkdirSync(reportAttachmentsPath, { recursive: true });
+}
+
+const reportStorage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, reportAttachmentsPath);
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+        cb(null, `report_${uniqueSuffix}${path.extname(file.originalname)}`);
+    }
+});
+
+const uploadReportAttachments = multer({ 
+    storage: reportStorage,
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB limit
+    fileFilter: (req, file, cb) => {
+        // Allow images, documents, and text files
+        const allowedMimes = [
+            'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+            'application/pdf', 'text/plain', 'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        ];
+        if (allowedMimes.includes(file.mimetype)) {
+            cb(null, true);
+        } else {
+            cb(new Error('Invalid file type. Only images, PDFs, and documents are allowed.'));
+        }
+    }
+});
+
+// Admin assignment helper function
+const assignAdminToReport = async () => {
+    try {
+        // Get all available admins (Admin and SuperAdmin)
+        const admins = await USERS.findAll({
+            where: {
+                UserAuth: {
+                    [Op.in]: ['Admin', 'SuperAdmin']
+                },
+                // Add any additional criteria (active status, etc.)
+            },
+            attributes: ['UserID', 'Username', 'UserAuth']
+        });
+
+        if (admins.length === 0) {
+            throw new Error('No available admins found');
+        }
+
+        // Simple round-robin assignment based on report count
+        const adminWorkload = await Promise.all(
+            admins.map(async (admin) => {
+                const reportCount = await REPORT.count({
+                    where: {
+                        AssignedAdminID: admin.UserID,
+                        Status: {
+                            [Op.in]: ['Pending', 'Under Review']
+                        }
+                    }
+                });
+                return {
+                    admin: admin,
+                    workload: reportCount
+                };
+            })
+        );
+
+        // Assign to admin with lowest workload
+        adminWorkload.sort((a, b) => a.workload - b.workload);
+        return adminWorkload[0].admin;
+
+    } catch (error) {
+        console.error('Error assigning admin:', error);
+        // Fallback: just return first available admin
+        const fallbackAdmin = await USERS.findOne({
+            where: { UserAuth: { [Op.in]: ['Admin', 'SuperAdmin'] } }
+        });
+        return fallbackAdmin;
+    }
+};
 
 // Search users by username (for starting conversations)
 router.get('/search-users', checkAuth(['User', 'Seller', 'Admin', 'SuperAdmin']), async (req, res) => {
