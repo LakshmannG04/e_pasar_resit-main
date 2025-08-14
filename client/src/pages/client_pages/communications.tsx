@@ -27,7 +27,6 @@ interface Conversation {
   Title: string;
   Description: string;
   Status: string;
-  Priority: string;
   CreatedAt: string;
   Complainant: any;
   Respondent: any;
@@ -48,7 +47,6 @@ export default function CommunicationSystem() {
   const [newConversationTitle, setNewConversationTitle] = useState('');
   const [newConversationDescription, setNewConversationDescription] = useState('');
   const [targetUsername, setTargetUsername] = useState('');
-  const [priority, setPriority] = useState('Medium');
   const [userSearchResults, setUserSearchResults] = useState<any[]>([]);
   const [searchingUsers, setSearchingUsers] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
@@ -57,25 +55,21 @@ export default function CommunicationSystem() {
     fetchConversations();
     fetchUnreadCount();
     
-    // Check for URL parameters to pre-fill contact form
-    const { contact, subject } = router.query;
-    if (contact && typeof contact === 'string') {
-      setTargetUsername(contact);
-      setShowCreateDialog(true);
+    // Check for direct conversation ID parameter (NEW STREAMLINED APPROACH)
+    const { conversation } = router.query;
+    if (conversation && typeof conversation === 'string') {
+      // Find and select the conversation directly
+      const conversationId = parseInt(conversation);
       
-      if (subject && typeof subject === 'string') {
-        // Decode URL-encoded subject
-        const decodedSubject = decodeURIComponent(subject);
-        setNewConversationTitle(decodedSubject);
-        setNewConversationDescription(`Hi, I'm interested in learning more about this product. Could you please provide more details?`);
-      }
-      
-      // Search for the user to pre-select them
-      if (contact.trim()) {
-        searchUsers(contact);
-      }
+      // Wait for conversations to load then select the specific one
+      setTimeout(() => {
+        const targetConversation = conversations.find(conv => conv.DisputeID === conversationId);
+        if (targetConversation) {
+          setSelectedConversation(targetConversation);
+        }
+      }, 1000);
     }
-  }, [router.query]);
+  }, [router.query, conversations]);
 
   const fetchConversations = async () => {
     try {
@@ -179,8 +173,7 @@ export default function CommunicationSystem() {
       const response = await axios.post(Endpoint.createDispute, {
         title: newConversationTitle,
         description: newConversationDescription,
-        targetUsername: selectedUser.Username,
-        priority: priority
+        targetUsername: selectedUser.Username
       }, {
         headers: { Authorization: `Bearer ${getToken("token")}` }
       });
@@ -208,22 +201,13 @@ export default function CommunicationSystem() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      'Open': 'bg-blue-100 text-blue-800',
-      'In Progress': 'bg-yellow-100 text-yellow-800',
-      'Resolved': 'bg-green-100 text-green-800',
-      'Closed': 'bg-gray-100 text-gray-800'
+      'Open': 'bg-green-100 text-green-800',
+      'In Progress': 'bg-blue-100 text-blue-800',
+      'Waiting Response': 'bg-yellow-100 text-yellow-800',
+      'Resolved': 'bg-gray-100 text-gray-800',
+      'Closed': 'bg-red-100 text-red-800'
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
-  };
-
-  const getPriorityColor = (priority: string) => {
-    const colors: Record<string, string> = {
-      'Low': 'bg-gray-100 text-gray-600',
-      'Medium': 'bg-blue-100 text-blue-600',
-      'High': 'bg-orange-100 text-orange-600',
-      'Urgent': 'bg-red-100 text-red-600'
-    };
-    return colors[priority] || 'bg-gray-100 text-gray-600';
   };
 
   return (
@@ -289,9 +273,6 @@ export default function CommunicationSystem() {
                               <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(conversation.Status)}`}>
                                 {conversation.Status}
                               </span>
-                              <span className={`px-2 py-1 rounded-full text-xs ${getPriorityColor(conversation.Priority)}`}>
-                                {conversation.Priority}
-                              </span>
                             </div>
                           </div>
                           <p className="text-xs text-gray-600 truncate mb-2">{conversation.Description}</p>
@@ -318,9 +299,6 @@ export default function CommunicationSystem() {
                           <div className="flex space-x-2">
                             <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedConversation.Status)}`}>
                               {selectedConversation.Status}
-                            </span>
-                            <span className={`px-3 py-1 rounded-full text-sm ${getPriorityColor(selectedConversation.Priority)}`}>
-                              {selectedConversation.Priority}
                             </span>
                           </div>
                         </div>
@@ -534,20 +512,6 @@ export default function CommunicationSystem() {
                         </div>
                       )}
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Priority</label>
-                    <select
-                      value={priority}
-                      onChange={(e) => setPriority(e.target.value)}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-200"
-                    >
-                      <option value="Low">Low</option>
-                      <option value="Medium">Medium</option>
-                      <option value="High">High</option>
-                      <option value="Urgent">Urgent</option>
-                    </select>
                   </div>
                 </div>
 

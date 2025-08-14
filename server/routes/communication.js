@@ -164,7 +164,7 @@ router.get('/search-users', checkAuth(['User', 'Seller', 'Admin', 'SuperAdmin'])
 // Create new dispute/communication thread (updated to accept username)
 router.post('/create-dispute', checkAuth(['User', 'Seller', 'Admin', 'SuperAdmin']), async (req, res) => {
     try {
-        const { title, description, lodgedAgainst, targetUsername, priority = 'Medium' } = req.body;
+        const { title, description, lodgedAgainst, targetUsername } = req.body;
         const user = req.user;
 
         if (!title || !description || (!lodgedAgainst && !targetUsername)) {
@@ -196,13 +196,13 @@ router.post('/create-dispute', checkAuth(['User', 'Seller', 'Admin', 'SuperAdmin
             }
         }
 
-        // Create dispute
+        // Create dispute (removed priority)
         const dispute = await DISPUTE.create({
             Title: title,
             Description: description,
             LodgedBy: user.id,
             LodgedAgainst: targetUser.UserID,
-            Priority: priority,
+            Priority: 'Medium', // Default value to maintain database compatibility
             Status: 'Open'
         });
 
