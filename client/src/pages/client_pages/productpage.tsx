@@ -310,7 +310,8 @@ export default function ProductPage({product, productImage}:any) {
                               {product.Seller.UserAuth}
                             </span>
                           </div>
-                          {token && (
+                          {/* Contact Seller Button - Only render after mount to prevent hydration mismatch */}
+                          {mounted && token && (
                             <div>
                               <button
                                 onClick={() => handleContactSeller(product.Seller.UserID, product.ProductID)}
