@@ -7,8 +7,8 @@ const { verifyToken } = require('../functions/verifyToken');
 const { checkAuth } = require('../functions/checkAuth');
 const fs = require('fs');
 
-// Import new services
-const { suggestCategory, getAvailableCategories } = require('../functions/categoryVerification');
+// Import enhanced verification services
+const { suggestCategory, verifyProductSuitability, getAvailableCategories } = require('../functions/categoryVerification');
 const { generateProductImage, getImageOptions } = require('../functions/imageService');
 
 const { sequelize, CATEGORY, PRODUCTS, CART, PRODUCT_VIEWS, DISPUTE_MSG, USERS } = require('../models');
