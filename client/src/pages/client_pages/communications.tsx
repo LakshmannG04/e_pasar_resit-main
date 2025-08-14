@@ -351,10 +351,21 @@ export default function CommunicationSystem() {
                             <h3 className="font-semibold text-gray-900">{selectedConversation.Title}</h3>
                             <p className="text-sm text-gray-600">{selectedConversation.Description}</p>
                           </div>
-                          <div className="flex space-x-2">
+                          <div className="flex items-center space-x-2">
                             <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedConversation.Status)}`}>
                               {selectedConversation.Status}
                             </span>
+                            {/* Report button for buyers and sellers */}
+                            {(userRole === 'User' || userRole === 'Seller') && (
+                              <button
+                                onClick={() => setShowReportDialog(true)}
+                                className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded-lg transition duration-200 flex items-center space-x-1"
+                                title="Report this conversation"
+                              >
+                                <span>🚨</span>
+                                <span>Report</span>
+                              </button>
+                            )}
                           </div>
                         </div>
                       </div>
